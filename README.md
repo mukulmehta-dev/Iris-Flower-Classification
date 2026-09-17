@@ -1,24 +1,26 @@
-# 🌸 Iris Flower Species Classification (AI/ML)
+# 🌸 IrisAI • Botanical Species Classification & Machine Learning Dashboard
 
-An end-to-end, production-ready Machine Learning system that classifies iris flowers into three distinct species (**Iris Setosa**, **Iris Versicolor**, and **Iris Virginica**) based on sepal and petal measurements.
+An end-to-end, production-grade Machine Learning system and modern web application that classifies iris flowers into three distinct species (**Iris Setosa**, **Iris Versicolor**, and **Iris Virginica**) based on morphometric dimensions.
 
-Developed with strict machine learning engineering practices, modular pipelines, diagnostic evaluation artifacts, an interactive Streamlit web dashboard, and a guided storytelling Jupyter Notebook.
+Featuring the bioluminescent glassmorphic UI design system from **[Stitch Project 14704649354205307970](https://stitch.withgoogle.com/projects/14704649354205307970)** ("IrisAI Classification Dashboard").
 
 ---
 
 ## 📌 Table of Contents
 1. [Overview & Objectives](#-overview--objectives)
-2. [Dataset Overview](#-dataset-overview)
-3. [Architecture & Featurization Pipeline](#-architecture--featurization-pipeline)
-4. [Model Comparison & Benchmark Results](#-model-comparison--benchmark-results)
-5. [Key Machine Learning Findings](#-key-machine-learning-findings)
+2. [Stitch UI Design System](#-stitch-ui-design-system)
+3. [Dataset Overview](#-dataset-overview)
+4. [Architecture & Featurization Pipeline](#-architecture--featurization-pipeline)
+5. [Model Comparison & Benchmark Results](#-model-comparison--benchmark-results)
 6. [Project Structure](#-project-structure)
 7. [Installation & Getting Started](#-installation--getting-started)
-8. [Usage](#-usage)
-   - [Running the Training Pipeline](#1-train-all-models--generate-reports)
-   - [CLI Real-Time Prediction](#2-cli-inference)
-   - [Interactive Web Application](#3-interactive-streamlit-dashboard)
-9. [Visual Artifacts Gallery](#-visual-artifacts-gallery)
+8. [Usage & Interfaces](#-usage--interfaces)
+   - [1. Modern Web Application (`server.py`)](#1-modern-web-application-serverpy)
+   - [2. Running the Training Pipeline](#2-train-all-models--generate-reports)
+   - [3. CLI Real-Time Prediction](#3-cli-inference)
+   - [4. Optional Streamlit Dashboard](#4-optional-streamlit-dashboard)
+9. [REST API Documentation](#-rest-api-documentation)
+10. [Visual Artifacts Gallery](#-visual-artifacts-gallery)
 
 ---
 
@@ -106,30 +108,47 @@ Evaluated across identical 5-fold stratified cross-validation folds and a 30-sam
 
 ---
 
+## 🎨 Stitch UI Design System
+
+This project features a complete UI redesign built to match the state-of-the-art **[Stitch Project 14704649354205307970](https://stitch.withgoogle.com/projects/14704649354205307970)** ("IrisAI Classification Dashboard"):
+
+- **Theme & Elevation:** Bioluminescent deep charcoal (`#0F131C` canvas) with layered glassmorphic elevation surfaces (`#111827`, `#181C24`, `#1E293B`, `#262A33`, `#31353E`) and glowing radial mesh backgrounds.
+- **Taxonomic Color Tokens:**
+  - **Iris Setosa**: Cyan (`#06B6D4` / `#4CD7F6`) • Cluster A
+  - **Iris Versicolor**: Electric Indigo (`#8B5CF6` / `#D0BCFF`) • Cluster B
+  - **Iris Virginica**: Emerald (`#10B981` / `#4EDEA3`) • Cluster C
+  - **Boundary Drift / Outliers**: Rose (`#F43F5E` / `#FFB4AB`)
+- **Typography:** `Geist` for body and structural headlines; `JetBrains Mono` for tabular metrics, feature readouts, and softmax logits.
+- **Brand Identity:** High-precision stylized neural/botanical IrisAI SVG logo with glowing petal nodes.
+- **5 Screen Views:**
+  1. **Overview Dashboard**: Fisher's 1936 hero, 4-bento metrics, quick inference slider box, species cards, recent predictions feed, and deep dive links.
+  2. **Predict Studio**: Step controls, benchmark presets, morphometric diagrams, real-time softmax probability bars, and botanical reference cards.
+  3. **Dataset Analytics**: Interactive SVG scatter plots with decision cluster hulls, correlation metrics ($r = +0.96$), and cluster filtering.
+  4. **Model Performance**: 3x3 normalized confusion matrix with misclassification spotlight, species diagnostics table, and $k$-NN hyperparameter tuning curve.
+  5. **Dataset Explorer**: Searchable botanical registry, species filter pills, sorting options, and CSV export.
+
+---
+
 ## 📁 Project Structure
 
 ```
-iris-classification/
+Iris-Flower-Classification/
+├── public/                              # Modern Stitch-designed Web Frontend
+│   ├── index.html                       # Responsive SPA with all 5 Stitch views & modals
+│   └── app.js                           # Frontend controller, live inference & charts
+├── server.py                            # Production-grade Python HTTP server & REST API
+├── test_server.py                       # Automated test suite for server & API endpoints
 ├── data/
-│   └── iris.csv                         # Saved dataset
+│   └── iris.csv                         # Saved dataset (150 botanical records)
 ├── models/
-│   ├── best_model.joblib                # Serialized top model
-│   ├── model_metadata.joblib            # Metadata & labels
-│   └── *_pipeline.joblib                # All 5 fitted pipelines
+│   ├── best_model.joblib                # Serialized top production model
+│   ├── model_metadata.joblib            # Metadata, features & target labels
+│   ├── metrics.json                     # Ground-truth evaluation metrics for API/UI
+│   └── *_pipeline.joblib                # All 5 fitted candidate pipelines
 ├── notebooks/
 │   └── iris_classification.ipynb        # Storytelling exploratory notebook
 ├── reports/
-│   └── figures/                         # Generated diagnostic figures
-│       ├── feature_distributions.png    # KDE and histogram plots
-│       ├── pairplot.png                 # Pairwise scatter matrix
-│       ├── correlation_heatmap.png      # Pearson correlation matrix
-│       ├── pca_projection.png           # 2D PCA projection
-│       ├── boxplots.png                 # Outlier & IQR box plots
-│       ├── confusion_matrices.png       # Test set confusion matrices
-│       ├── roc_curves.png               # One-vs-Rest ROC curves
-│       ├── knn_elbow_curve.png          # K hyperparameter tuning curve
-│       ├── decision_boundaries.png      # 2D decision boundary maps
-│       └── feature_importance.png       # Gini importance bars
+│   └── figures/                         # Generated diagnostic figures & charts
 ├── src/
 │   ├── __init__.py
 │   ├── data.py                          # Data loading, validation, splitting
@@ -137,9 +156,9 @@ iris-classification/
 │   ├── models.py                        # Model zoo, CV, tuning, serialization
 │   ├── evaluate.py                      # Metrics, confusion matrices, ROC, boundaries
 │   └── predict.py                       # Inference engine and CLI
-├── app.py                               # Interactive Streamlit dashboard
-├── train.py                             # Master training script
-├── pyproject.toml                       # Modern project configuration
+├── app.py                               # Styled Streamlit dashboard
+├── train.py                             # Master training and evaluation orchestrator
+├── pyproject.toml                       # Project configuration
 ├── requirements.txt                     # Dependencies
 └── README.md                            # Documentation
 ```
@@ -150,54 +169,94 @@ iris-classification/
 
 ### 1. Prerequisites
 - Python 3.10+ installed
-- `uv` (recommended) or standard `venv`
+- Standard virtual environment (`.venv`)
 
 ### 2. Setup Environment
-```bash
-# Clone or navigate to the project directory
-cd C:\Users\sdmgo\.gemini\antigravity-ide\scratch\iris-classification
-
-# Create virtual environment and install dependencies using uv:
-uv venv
+```powershell
+# Activate existing virtual environment:
 .\.venv\Scripts\activate
-uv pip install -r requirements.txt
+
+# Install dependencies:
+pip install -r requirements.txt
 ```
 
 ---
 
-## 💻 Usage
+## 💻 Usage & Interfaces
 
-### 1. Train All Models & Generate Reports
-Executes ingestion, EDA, 5-fold cross-validation, hyperparameter tuning, holdout testing, and artifact exports:
+### 1. Modern Web Application (`server.py`)
+Launch the production REST API server and Stitch web dashboard:
+```powershell
+.\.venv\Scripts\python.exe server.py
+```
+Open your browser at:
+👉 **[http://127.0.0.1:8000](http://127.0.0.1:8000)**
+
+*(Note: The web client in `public/index.html` also includes built-in offline calculation heuristics, allowing it to be opened directly in any web browser!)*
+
+### 2. Run Automated API & Server Test Suite
+```powershell
+.\.venv\Scripts\python.exe test_server.py
+```
+
+### 3. Train All Models & Generate Reports
+Executes ingestion, EDA, 5-fold cross-validation, hyperparameter tuning, holdout testing, and exports `models/metrics.json`:
 ```powershell
 .\.venv\Scripts\python.exe train.py
 ```
 
-### 2. CLI Inference
-Classify any specimen instantly from terminal:
+### 4. CLI Inference
+Classify any specimen directly from terminal:
 ```powershell
 .\.venv\Scripts\python.exe -m src.predict --sepal-length 5.1 --sepal-width 3.5 --petal-length 1.4 --petal-width 0.2
 ```
-Output:
-```text
-=============================================
-🌸 Prediction Result: Iris Setosa
-Confidence: 99.82%
-Model Architecture: Support Vector Machine
----------------------------------------------
-Class Probabilities:
-  • Setosa      : 99.82% ████████████████████████
-  • Versicolor  :  0.14% 
-  • Virginica   :  0.04% 
-=============================================
-```
 
-### 3. Interactive Streamlit Dashboard
-Launch the interactive web laboratory:
+### 5. Optional Streamlit Dashboard
+Launch the interactive Streamlit laboratory (updated with Stitch dark theme):
 ```powershell
 .\.venv\Scripts\streamlit.exe run app.py
 ```
-Open `http://localhost:8501` in your browser.
+
+---
+
+## 🔌 REST API Documentation
+
+| Endpoint | Method | Description |
+| :--- | :---: | :--- |
+| `/api/health` | `GET` | Health check, service status, and model readiness |
+| `/api/predict` | `POST` | Real-time prediction with probabilities and morphological ratios |
+| `/api/metrics` | `GET` | Model leaderboard, confusion matrix, and hyperparameter tuning |
+| `/api/dataset` | `GET` | Filterable, searchable, and sortable botanical dataset records |
+
+#### Example Predict Request (`POST /api/predict`):
+```json
+{
+  "sepal_length": 5.1,
+  "sepal_width": 3.5,
+  "petal_length": 1.4,
+  "petal_width": 0.2
+}
+```
+#### Example Predict Response:
+```json
+{
+  "predicted_species": "setosa",
+  "confidence": 0.998,
+  "probabilities": {
+    "setosa": 0.998,
+    "versicolor": 0.0016,
+    "virginica": 0.0004
+  },
+  "morphology": {
+    "sepal_ratio": 1.46,
+    "petal_ratio": 7.0,
+    "boundary_sigma": 3.24,
+    "cluster": "Cluster A"
+  },
+  "model_name": "Support Vector Machine",
+  "latency_ms": 0.8
+}
+```
 
 ---
 

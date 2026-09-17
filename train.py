@@ -22,6 +22,7 @@ if sys.stdout.encoding != "utf-8":
     except Exception:
         pass
 
+import numpy as np
 import pandas as pd
 
 from src.data import (
@@ -130,6 +131,94 @@ def run_pipeline():
     )
     print(f"      ★ Best Model Selected: {best_model_name}")
     print(f"      ★ Serialized to: {best_path}")
+
+    # 8. Export metrics.json for Web Application & REST API
+    import json
+    from sklearn.metrics import confusion_matrix, classification_report
+
+    best_pipe = fitted_pipelines[best_model_name]
+    y_pred_best = best_pipe.predict(X_test)
+    cm = confusion_matrix(y_test, y_pred_best)
+    cm_norm = cm.astype("float") / cm.sum(axis=1)[:, np.newaxis]
+
+    report = classification_report(y_test, y_pred_best, target_names=tgt_names, output_dict=True)
+
+    # Extract feature importances from Random Forest if available
+    fi_dict = {}
+    if "Random Forest" in fitted_pipelines:
+        rf_model = fitted_pipelines["Random Forest"].named_steps["classifier"]
+        fi_dict = {
+            feat: round(float(imp), 4)
+            for feat, imp in zip(feat_names, rf_model.feature_importances_)
+        }
+
+    # Format models evaluation list
+    eval_list = []
+    for _, row in test_metrics.iterrows():
+        m_name = row["Model"]
+        cv_match = cv_results[cv_results["Model"] == m_name]
+        cv_acc = float(cv_match["CV Accuracy (Mean)"].iloc[0]) if not cv_match.empty else None
+        eval_list.append({
+            "model": m_name,
+            "test_accuracy": round(float(row["Test Accuracy"]), 4),
+            "precision_macro": round(float(row["Precision (Macro)"]), 4),
+            "recall_macro": round(float(row["Recall (Macro)"]), 4),
+            "f1_macro": round(float(row["F1-Score (Macro)"]), 4),
+            "roc_auc_macro": round(float(row["ROC-AUC (Macro)"]), 4) if not np.isnan(row["ROC-AUC (Macro)"]) else None,
+            "cv_accuracy": round(cv_acc, 4) if cv_acc is not None else None,
+        })
+
+    metrics_payload = {
+        "dataset_summary": {
+            "total_samples": int(len(df)),
+            "train_samples": int(len(X_train)),
+            "test_samples": int(len(X_test)),
+            "features_count": int(len(feat_names)),
+            "classes_count": int(len(tgt_names)),
+            "classes": tgt_names,
+            "features": feat_names,
+            "feature_means": {k: round(float(v), 2) for k, v in df[feat_names].mean().items()},
+            "feature_mins": {k: round(float(v), 2) for k, v in df[feat_names].min().items()},
+            "feature_maxs": {k: round(float(v), 2) for k, v in df[feat_names].max().items()},
+            "class_distribution": {k: int(v) for k, v in df["species"].value_counts().items()},
+        },
+        "best_model": {
+            "name": best_model_name,
+            "test_accuracy": round(float(merged[merged["Model"] == best_model_name]["Test Accuracy"].iloc[0]), 4),
+            "cv_accuracy": round(float(merged[merged["Model"] == best_model_name]["CV Accuracy (Mean)"].iloc[0]), 4),
+            "macro_precision": round(float(merged[merged["Model"] == best_model_name]["Precision (Macro)"].iloc[0]), 4),
+            "macro_recall": round(float(merged[merged["Model"] == best_model_name]["Recall (Macro)"].iloc[0]), 4),
+            "macro_f1": round(float(merged[merged["Model"] == best_model_name]["F1-Score (Macro)"].iloc[0]), 4),
+        },
+        "models_evaluation": eval_list,
+        "confusion_matrix": {
+            "classes": tgt_names,
+            "matrix": cm.tolist(),
+            "normalized": [[round(float(val), 4) for val in row] for row in cm_norm],
+            "total_samples": int(cm.sum()),
+            "misclassifications": int(cm.sum() - np.trace(cm)),
+        },
+        "species_diagnostics": {
+            s: {
+                "precision": round(report[s]["precision"], 4),
+                "recall": round(report[s]["recall"], 4),
+                "f1_score": round(report[s]["f1-score"], 4),
+                "support": int(report[s]["support"]),
+            }
+            for s in tgt_names if s in report
+        },
+        "knn_tuning": {
+            "optimal_k": int(best_k),
+            "k_range": list(range(1, 21)),
+            "scores": [round(float(k_scores[k]), 4) for k in range(1, 21)],
+        },
+        "feature_importances": fi_dict,
+    }
+
+    metrics_path = Path("models/metrics.json")
+    with open(metrics_path, "w", encoding="utf-8") as f:
+        json.dump(metrics_payload, f, indent=2)
+    print(f"      ✓ Metrics JSON exported: {metrics_path}")
 
     print("\n" + "=" * 65)
     print("✅ PIPELINE EXECUTION COMPLETED SUCCESSFULLY")

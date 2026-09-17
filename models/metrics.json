@@ -1,0 +1,214 @@
+{
+  "dataset_summary": {
+    "total_samples": 150,
+    "train_samples": 120,
+    "test_samples": 30,
+    "features_count": 4,
+    "classes_count": 3,
+    "classes": [
+      "setosa",
+      "versicolor",
+      "virginica"
+    ],
+    "features": [
+      "sepal_length",
+      "sepal_width",
+      "petal_length",
+      "petal_width"
+    ],
+    "feature_means": {
+      "sepal_length": 5.84,
+      "sepal_width": 3.06,
+      "petal_length": 3.76,
+      "petal_width": 1.2
+    },
+    "feature_mins": {
+      "sepal_length": 4.3,
+      "sepal_width": 2.0,
+      "petal_length": 1.0,
+      "petal_width": 0.1
+    },
+    "feature_maxs": {
+      "sepal_length": 7.9,
+      "sepal_width": 4.4,
+      "petal_length": 6.9,
+      "petal_width": 2.5
+    },
+    "class_distribution": {
+      "setosa": 50,
+      "versicolor": 50,
+      "virginica": 50
+    }
+  },
+  "best_model": {
+    "name": "Support Vector Machine",
+    "test_accuracy": 0.9667,
+    "cv_accuracy": 0.9667,
+    "macro_precision": 0.9697,
+    "macro_recall": 0.9667,
+    "macro_f1": 0.9666
+  },
+  "models_evaluation": [
+    {
+      "model": "Decision Tree",
+      "test_accuracy": 0.9667,
+      "precision_macro": 0.9697,
+      "recall_macro": 0.9667,
+      "f1_macro": 0.9666,
+      "roc_auc_macro": 0.9717,
+      "cv_accuracy": 0.9583
+    },
+    {
+      "model": "Support Vector Machine",
+      "test_accuracy": 0.9667,
+      "precision_macro": 0.9697,
+      "recall_macro": 0.9667,
+      "f1_macro": 0.9666,
+      "roc_auc_macro": 0.9967,
+      "cv_accuracy": 0.9667
+    },
+    {
+      "model": "Random Forest",
+      "test_accuracy": 0.9667,
+      "precision_macro": 0.9697,
+      "recall_macro": 0.9667,
+      "f1_macro": 0.9666,
+      "roc_auc_macro": 0.9933,
+      "cv_accuracy": 0.95
+    },
+    {
+      "model": "Logistic Regression",
+      "test_accuracy": 0.9333,
+      "precision_macro": 0.9333,
+      "recall_macro": 0.9333,
+      "f1_macro": 0.9333,
+      "roc_auc_macro": 0.9967,
+      "cv_accuracy": 0.9583
+    },
+    {
+      "model": "K-Nearest Neighbors",
+      "test_accuracy": 0.9333,
+      "precision_macro": 0.9444,
+      "recall_macro": 0.9333,
+      "f1_macro": 0.9327,
+      "roc_auc_macro": 0.9933,
+      "cv_accuracy": 0.9667
+    }
+  ],
+  "confusion_matrix": {
+    "classes": [
+      "setosa",
+      "versicolor",
+      "virginica"
+    ],
+    "matrix": [
+      [
+        10,
+        0,
+        0
+      ],
+      [
+        0,
+        9,
+        1
+      ],
+      [
+        0,
+        0,
+        10
+      ]
+    ],
+    "normalized": [
+      [
+        1.0,
+        0.0,
+        0.0
+      ],
+      [
+        0.0,
+        0.9,
+        0.1
+      ],
+      [
+        0.0,
+        0.0,
+        1.0
+      ]
+    ],
+    "total_samples": 30,
+    "misclassifications": 1
+  },
+  "species_diagnostics": {
+    "setosa": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1_score": 1.0,
+      "support": 10
+    },
+    "versicolor": {
+      "precision": 1.0,
+      "recall": 0.9,
+      "f1_score": 0.9474,
+      "support": 10
+    },
+    "virginica": {
+      "precision": 0.9091,
+      "recall": 1.0,
+      "f1_score": 0.9524,
+      "support": 10
+    }
+  },
+  "knn_tuning": {
+    "optimal_k": 3,
+    "k_range": [
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+      10,
+      11,
+      12,
+      13,
+      14,
+      15,
+      16,
+      17,
+      18,
+      19,
+      20
+    ],
+    "scores": [
+      0.9417,
+      0.95,
+      0.9667,
+      0.9583,
+      0.9583,
+      0.9417,
+      0.9333,
+      0.9417,
+      0.9583,
+      0.9583,
+      0.95,
+      0.9583,
+      0.95,
+      0.925,
+      0.925,
+      0.925,
+      0.925,
+      0.925,
+      0.9167,
+      0.9167
+    ]
+  },
+  "feature_importances": {
+    "sepal_length": 0.1156,
+    "sepal_width": 0.0108,
+    "petal_length": 0.4377,
+    "petal_width": 0.4359
+  }
+}

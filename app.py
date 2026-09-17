@@ -27,31 +27,36 @@ st.set_page_config(
 st.markdown(
     """
     <style>
+    .stApp {
+        background-color: #0F131C;
+        color: #DFE2EE;
+    }
     .main-title {
         font-size: 2.4rem;
         font-weight: 800;
         margin-bottom: 0.2rem;
-        background: linear-gradient(135deg, #4F46E5 0%, #9333EA 50%, #EC4899 100%);
+        background: linear-gradient(135deg, #06B6D4 0%, #8B5CF6 50%, #10B981 100%);
         -webkit-background-clip: text;
         -webkit-text-fill-color: transparent;
-        color: #7C3AED;
         letter-spacing: -0.5px;
     }
     .sub-title {
         font-size: 1.05rem;
-        color: #64748B;
+        color: #94A3B8;
         margin-bottom: 1.5rem;
     }
     .metric-card {
-        background: #F8FAFC;
-        border: 1px solid #E2E8F0;
-        border-radius: 10px;
+        background: #1C2028;
+        border: 1px solid #262A33;
+        border-radius: 12px;
         padding: 1.2rem;
         text-align: center;
+        color: #DFE2EE;
     }
     .badge-setosa {
-        background-color: #EEF2FF;
-        color: #4F46E5;
+        background-color: rgba(6, 182, 212, 0.15);
+        color: #06B6D4;
+        border: 1px solid rgba(6, 182, 212, 0.3);
         padding: 0.35rem 0.75rem;
         border-radius: 9999px;
         font-weight: 600;
@@ -59,9 +64,9 @@ st.markdown(
         display: inline-block;
     }
     .badge-versicolor {
-        background-color: #FFF7ED;
-        color: #EA580C;
-        border: 1px solid #FFEDD5;
+        background-color: rgba(139, 92, 246, 0.15);
+        color: #8B5CF6;
+        border: 1px solid rgba(139, 92, 246, 0.3);
         padding: 0.35rem 0.75rem;
         border-radius: 9999px;
         font-weight: 600;
@@ -69,8 +74,9 @@ st.markdown(
         display: inline-block;
     }
     .badge-virginica {
-        background-color: #ECFDF5;
-        color: #059669;
+        background-color: rgba(16, 185, 129, 0.15);
+        color: #10B981;
+        border: 1px solid rgba(16, 185, 129, 0.3);
         padding: 0.35rem 0.75rem;
         border-radius: 9999px;
         font-weight: 600;
@@ -83,8 +89,8 @@ st.markdown(
 )
 
 SPECIES_COLORS = {
-    "setosa": "#6366F1",
-    "versicolor": "#EA580C",
+    "setosa": "#06B6D4",
+    "versicolor": "#8B5CF6",
     "virginica": "#10B981",
 }
 
@@ -232,8 +238,8 @@ with tab_predict:
             badge_class = f"badge-{pred_species}"
             st.markdown(
                 f"""
-                <div style="background: white; border: 1px solid #E2E8F0; padding: 1.5rem; border-radius: 12px; margin-bottom: 1.2rem; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);">
-                    <div style="font-size: 0.9rem; color: #64748B; font-weight: 500;">PREDICTED SPECIES</div>
+                <div style="background: #181C24; border: 1px solid #262A33; color: #DFE2EE; padding: 1.5rem; border-radius: 12px; margin-bottom: 1.2rem; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.3);">
+                    <div style="font-size: 0.9rem; color: #94A3B8; font-weight: 500;">PREDICTED SPECIES</div>
                     <div style="font-size: 2.2rem; font-weight: 800; margin: 0.3rem 0; color: {SPECIES_COLORS[pred_species]}; letter-spacing: -0.5px;">
                         Iris {pred_species.capitalize()}
                     </div>

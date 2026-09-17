@@ -1,0 +1,1569 @@
+<!DOCTYPE html>
+<html class="dark" lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" name="viewport"/>
+  <title>IrisAI • Botanical Classification &amp; Machine Learning Dashboard</title>
+  
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin=""/>
+  <link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"/>
+
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script id="tailwind-config">
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          colors: {
+            "surface-dim": "#0f131c",
+            "surface": "#0f131c",
+            "background": "#0f131c",
+            "surface-container-lowest": "#0a0e16",
+            "surface-container-low": "#181c24",
+            "surface-container": "#1c2028",
+            "surface-container-high": "#262a33",
+            "surface-container-highest": "#31353e",
+            "surface-bright": "#353942",
+            "surface-variant": "#31353e",
+            "on-surface": "#dfe2ee",
+            "on-surface-variant": "#bcc9cd",
+            "on-background": "#dfe2ee",
+            "inverse-surface": "#dfe2ee",
+            "inverse-on-surface": "#2c3039",
+            "outline": "#869397",
+            "outline-variant": "#3d494c",
+            "primary": "#4cd7f6",
+            "primary-container": "#06b6d4",
+            "on-primary": "#003640",
+            "on-primary-container": "#00424f",
+            "primary-fixed": "#acedff",
+            "primary-fixed-dim": "#4cd7f6",
+            "secondary": "#d0bcff",
+            "secondary-container": "#571bc1",
+            "on-secondary": "#3c0091",
+            "on-secondary-container": "#c4abff",
+            "secondary-fixed": "#e9ddff",
+            "secondary-fixed-dim": "#d0bcff",
+            "tertiary": "#4edea3",
+            "tertiary-container": "#1bbd85",
+            "on-tertiary": "#003824",
+            "on-tertiary-container": "#00452e",
+            "tertiary-fixed": "#6ffbbe",
+            "tertiary-fixed-dim": "#4edea3",
+            "error": "#ffb4ab",
+            "error-container": "#93000a",
+            "on-error": "#690005",
+            "on-error-container": "#ffdad6"
+          },
+          borderRadius: {
+            "DEFAULT": "0.375rem",
+            "lg": "0.5rem",
+            "xl": "0.75rem",
+            "2xl": "1rem",
+            "full": "9999px"
+          },
+          spacing: {
+            "space-xs": "0.25rem",
+            "space-sm": "0.5rem",
+            "space-md": "1rem",
+            "space-lg": "1.5rem",
+            "space-xl": "2.5rem",
+            "gutter-mobile": "0.875rem",
+            "margin-mobile": "1rem"
+          },
+          fontFamily: {
+            "headline-xl": ["Geist", "sans-serif"],
+            "headline-lg": ["Geist", "sans-serif"],
+            "headline-md": ["Geist", "sans-serif"],
+            "headline-sm": ["Geist", "sans-serif"],
+            "body-lg": ["Geist", "sans-serif"],
+            "body-md": ["Geist", "sans-serif"],
+            "body-sm": ["Geist", "sans-serif"],
+            "label-lg": ["JetBrains Mono", "monospace"],
+            "label-md": ["JetBrains Mono", "monospace"],
+            "label-sm": ["JetBrains Mono", "monospace"]
+          }
+        }
+      }
+    };
+  </script>
+
+  <style>
+    @layer base {
+      html, body {
+        width: 100%;
+        margin: 0;
+        padding: 0;
+        background-color: #0f131c;
+        color: #dfe2ee;
+        font-family: 'Geist', sans-serif;
+      }
+      body {
+        overscroll-behavior: none;
+      }
+      .pb-safe { padding-bottom: env(safe-area-inset-bottom, 0px); }
+      .pt-safe { padding-top: env(safe-area-inset-top, 0px); }
+    }
+    ::-webkit-scrollbar { display: none; }
+    .no-scrollbar::-webkit-scrollbar { display: none; }
+    .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+    
+    /* Active view styling */
+    .view-section { display: none; }
+    .view-section.active { display: flex; }
+    
+    /* Range slider custom styling */
+    input[type=range] {
+      -webkit-appearance: none;
+      background: #31353e;
+      border-radius: 9999px;
+    }
+    input[type=range]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      height: 18px;
+      width: 18px;
+      border-radius: 50%;
+      background: #ffffff;
+      cursor: pointer;
+      box-shadow: 0 0 10px rgba(76, 215, 246, 0.7);
+      border: 2px solid #06b6d4;
+    }
+    
+    /* Glow animations */
+    @keyframes pulseGlow {
+      0%, 100% { box-shadow: 0 0 12px rgba(6, 182, 212, 0.25); }
+      50% { box-shadow: 0 0 24px rgba(6, 182, 212, 0.5); }
+    }
+    .pulse-glow-cyan { animation: pulseGlow 3s infinite ease-in-out; }
+  </style>
+</head>
+<body class="bg-surface text-on-surface font-body-md text-body-md flex flex-col min-h-screen selection:bg-primary-container selection:text-on-primary">
+
+  <!-- ================= FIXED HEADER ================= -->
+  <header class="fixed top-0 w-full z-50 pt-safe bg-surface-dim/85 backdrop-blur-xl border-b border-surface-container-high/60 shadow-[0_4px_24px_rgba(0,0,0,0.4)]">
+    <div class="max-w-7xl mx-auto h-16 px-4 md:px-8 flex items-center justify-between">
+      
+      <!-- Logo & Title -->
+      <div class="flex items-center gap-3 cursor-pointer" onclick="switchTab('dashboard')">
+        <!-- Botanical Neural Iris SVG Logo -->
+        <div class="w-9 h-9 rounded-xl bg-surface-container flex items-center justify-center shadow-md flex-shrink-0">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none" class="w-7 h-7">
+            <defs>
+              <linearGradient id="irisGradHeader" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stop-color="#06B6D4" />
+                <stop offset="50%" stop-color="#8B5CF6" />
+                <stop offset="100%" stop-color="#10B981" />
+              </linearGradient>
+              <radialGradient id="irisGlowHeader" cx="50%" cy="50%" r="50%">
+                <stop offset="0%" stop-color="#06B6D4" stop-opacity="0.3" />
+                <stop offset="100%" stop-color="#06B6D4" stop-opacity="0" />
+              </radialGradient>
+            </defs>
+            <circle cx="32" cy="32" r="28" fill="#111827" stroke="url(#irisGradHeader)" stroke-width="2" />
+            <circle cx="32" cy="32" r="20" fill="url(#irisGlowHeader)" />
+            <path d="M32 14 C36 22, 36 26, 32 34 C28 26, 28 22, 32 14 Z" fill="url(#irisGradHeader)" opacity="0.95" />
+            <path d="M22 28 C28 30, 31 34, 32 34 C30 38, 25 44, 18 38 C14 34, 16 29, 22 28 Z" fill="#06B6D4" opacity="0.85" />
+            <path d="M42 28 C36 30, 33 34, 32 34 C34 38, 39 44, 46 38 C50 34, 48 29, 42 28 Z" fill="#8B5CF6" opacity="0.85" />
+            <circle cx="32" cy="34" r="3.5" fill="#FFFFFF" />
+            <circle cx="32" cy="46" r="2" fill="#10B981" />
+            <line x1="32" y1="37.5" x2="32" y2="44" stroke="#10B981" stroke-width="1.5" stroke-dasharray="2 1" />
+          </svg>
+        </div>
+        <div class="flex flex-col">
+          <div class="flex items-center gap-1.5">
+            <span class="font-headline-sm text-headline-sm text-on-surface tracking-tight font-semibold">IrisAI</span>
+            <span class="text-outline-variant">/</span>
+            <span id="header-breadcrumb" class="font-label-sm text-label-sm text-primary uppercase font-mono tracking-wider">Dashboard</span>
+          </div>
+          <span class="font-label-sm text-[11px] text-on-surface-variant font-mono">Fisher's Taxonomy Laboratory</span>
+        </div>
+      </div>
+
+      <!-- Desktop Navigation Tabs -->
+      <nav class="hidden md:flex items-center gap-1.5 p-1 rounded-full bg-surface-container border border-surface-container-high/60 shadow-inner">
+        <button onclick="switchTab('dashboard')" class="nav-tab-desktop px-4 py-1.5 rounded-full font-label-sm text-label-sm transition-all flex items-center gap-1.5 active text-on-surface bg-surface-container-highest shadow-sm" data-target="dashboard">
+          <span class="material-symbols-outlined text-[16px]">analytics</span>
+          <span>Overview</span>
+        </button>
+        <button onclick="switchTab('predict')" class="nav-tab-desktop px-4 py-1.5 rounded-full font-label-sm text-label-sm text-on-surface-variant hover:text-on-surface transition-all flex items-center gap-1.5" data-target="predict">
+          <span class="material-symbols-outlined text-[16px]">psychology</span>
+          <span>Predict</span>
+        </button>
+        <button onclick="switchTab('analytics')" class="nav-tab-desktop px-4 py-1.5 rounded-full font-label-sm text-label-sm text-on-surface-variant hover:text-on-surface transition-all flex items-center gap-1.5" data-target="analytics">
+          <span class="material-symbols-outlined text-[16px]">scatter_plot</span>
+          <span>Analytics</span>
+        </button>
+        <button onclick="switchTab('performance')" class="nav-tab-desktop px-4 py-1.5 rounded-full font-label-sm text-label-sm text-on-surface-variant hover:text-on-surface transition-all flex items-center gap-1.5" data-target="performance">
+          <span class="material-symbols-outlined text-[16px]">grid_view</span>
+          <span>Metrics</span>
+        </button>
+        <button onclick="switchTab('dataset')" class="nav-tab-desktop px-4 py-1.5 rounded-full font-label-sm text-label-sm text-on-surface-variant hover:text-on-surface transition-all flex items-center gap-1.5" data-target="dataset">
+          <span class="material-symbols-outlined text-[16px]">table_chart</span>
+          <span>Dataset</span>
+        </button>
+      </nav>
+
+      <!-- Right Header Actions -->
+      <div class="flex items-center gap-3">
+        <!-- Live Status Badge -->
+        <div class="flex items-center gap-2 px-3 py-1 rounded-full bg-surface-container-high/60 border border-surface-container-highest/40 shadow-sm">
+          <span class="relative flex h-2.5 w-2.5">
+            <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-tertiary opacity-75"></span>
+            <span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-tertiary"></span>
+          </span>
+          <span id="model-status-text" class="font-label-sm text-label-sm text-tertiary font-mono font-medium hidden sm:inline-block">Model Online</span>
+        </div>
+
+        <!-- Info / About Modal Button -->
+        <button onclick="openModal('about-modal')" class="w-9 h-9 rounded-xl bg-surface-container hover:bg-surface-container-high flex items-center justify-center text-on-surface-variant hover:text-on-surface transition-colors shadow-sm" title="About Project">
+          <span class="material-symbols-outlined text-[18px]">info</span>
+        </button>
+
+        <!-- Settings Modal Button -->
+        <button onclick="openModal('settings-modal')" class="w-9 h-9 rounded-xl bg-surface-container hover:bg-surface-container-high flex items-center justify-center text-on-surface-variant hover:text-on-surface transition-colors shadow-sm" title="System Settings">
+          <span class="material-symbols-outlined text-[18px]">settings</span>
+        </button>
+      </div>
+
+    </div>
+  </header>
+
+  <!-- ================= MAIN CONTENT CONTAINER ================= -->
+  <main class="flex flex-col relative w-full pt-20 pb-28 md:pb-16 flex-1 max-w-7xl mx-auto px-4 md:px-8">
+
+    <!-- ================= VIEW 1: DASHBOARD (OVERVIEW) ================= -->
+    <section id="view-dashboard" class="view-section active flex-col space-y-6 w-full">
+      
+      <!-- Hero Banner with Ambient Glow -->
+      <div class="relative w-full rounded-2xl bg-surface-container-low p-6 md:p-8 shadow-xl overflow-hidden border border-surface-container-high/60">
+        <div class="absolute -right-16 -top-16 w-64 h-64 rounded-full bg-primary/10 blur-3xl pointer-events-none"></div>
+        <div class="absolute -left-16 -bottom-16 w-64 h-64 rounded-full bg-secondary-container/20 blur-3xl pointer-events-none"></div>
+        
+        <div class="relative z-10 flex flex-col space-y-3">
+          <div class="flex flex-wrap items-center justify-between gap-2">
+            <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-surface-container-high text-tertiary font-label-sm text-label-sm font-mono border border-tertiary/20">
+              <span class="w-2 h-2 rounded-full bg-tertiary animate-pulse"></span>
+              <span id="hero-model-badge">KNN (k=3) • 96.7% Val Acc</span>
+            </span>
+            <span class="font-label-sm text-label-sm text-on-surface-variant flex items-center gap-1.5 font-mono">
+              <span class="material-symbols-outlined text-[16px] text-primary">hub</span>
+              <span>v2.4 Production • Strict Featurization</span>
+            </span>
+          </div>
+
+          <div class="pt-1">
+            <h1 class="font-headline-xl text-3xl md:text-4xl text-on-surface font-semibold tracking-tight">
+              Iris Flower Species Classification
+            </h1>
+            <p class="font-body-md text-base text-on-surface-variant max-w-3xl mt-1">
+              High-precision botanical taxonomy powered by scikit-learn. Real-time inference across 4 morphological measurements with calibrated decision boundary analysis.
+            </p>
+          </div>
+
+          <div class="flex flex-wrap items-center gap-4 pt-2">
+            <div class="flex -space-x-1.5 overflow-hidden">
+              <div class="inline-flex h-6 w-6 rounded-full bg-primary-container items-center justify-center text-[10px] font-bold text-on-primary font-mono" title="Iris Setosa">S</div>
+              <div class="inline-flex h-6 w-6 rounded-full bg-secondary-container items-center justify-center text-[10px] font-bold text-on-secondary font-mono" title="Iris Versicolor">Ve</div>
+              <div class="inline-flex h-6 w-6 rounded-full bg-tertiary-container items-center justify-center text-[10px] font-bold text-on-tertiary font-mono" title="Iris Virginica">Vi</div>
+            </div>
+            <span class="font-label-sm text-label-sm text-outline font-mono">Fisher's Classical 1936 Benchmark</span>
+            <span class="text-outline-variant">•</span>
+            <span class="font-label-sm text-label-sm text-primary font-mono cursor-pointer hover:underline" onclick="switchTab('predict')">Launch Inference Studio →</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- 4-Bento Summary Metrics (2x2 on Mobile, 4 Cols on Desktop) -->
+      <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        <!-- Card 1: Dataset Samples -->
+        <div class="flex flex-col justify-between p-5 rounded-xl bg-surface-container border border-surface-container-high/60 shadow-md">
+          <div class="flex items-center justify-between">
+            <span class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider font-mono">Dataset</span>
+            <span class="material-symbols-outlined text-[20px] text-primary">data_array</span>
+          </div>
+          <div class="my-3">
+            <span id="bento-samples-count" class="font-headline-md text-3xl font-bold text-on-surface font-mono">150</span>
+            <span class="font-label-sm text-label-sm text-tertiary ml-1 font-mono">Samples</span>
+          </div>
+          <div class="space-y-1.5">
+            <div class="flex items-end gap-1 h-6 w-full pt-1">
+              <div class="flex-1 bg-primary/40 rounded-t h-[75%]"></div>
+              <div class="flex-1 bg-primary rounded-t h-[100%]"></div>
+              <div class="flex-1 bg-primary/60 rounded-t h-[60%]"></div>
+              <div class="flex-1 bg-primary/80 rounded-t h-[90%]"></div>
+              <div class="flex-1 bg-primary rounded-t h-[100%]"></div>
+              <div class="flex-1 bg-primary/50 rounded-t h-[70%]"></div>
+            </div>
+            <div class="flex justify-between font-label-sm text-[11px] text-outline font-mono">
+              <span>50 / class</span>
+              <span>Bal. 1:1:1</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Card 2: Species Classes -->
+        <div class="flex flex-col justify-between p-5 rounded-xl bg-surface-container border border-surface-container-high/60 shadow-md">
+          <div class="flex items-center justify-between">
+            <span class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider font-mono">Classes</span>
+            <span class="material-symbols-outlined text-[20px] text-secondary">category</span>
+          </div>
+          <div class="my-3">
+            <span class="font-headline-md text-3xl font-bold text-on-surface font-mono">3</span>
+            <span class="font-label-sm text-label-sm text-on-surface-variant ml-1 font-mono">Taxa</span>
+          </div>
+          <div class="flex flex-wrap gap-1.5">
+            <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-surface-container-high text-primary font-label-sm text-xs font-mono">
+              <span class="w-1.5 h-1.5 rounded-full bg-primary"></span>Setosa
+            </span>
+            <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-surface-container-high text-secondary font-label-sm text-xs font-mono">
+              <span class="w-1.5 h-1.5 rounded-full bg-secondary"></span>Versic.
+            </span>
+            <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-surface-container-high text-tertiary font-label-sm text-xs font-mono">
+              <span class="w-1.5 h-1.5 rounded-full bg-tertiary"></span>Virgin.
+            </span>
+          </div>
+        </div>
+
+        <!-- Card 3: Features Measured -->
+        <div class="flex flex-col justify-between p-5 rounded-xl bg-surface-container border border-surface-container-high/60 shadow-md">
+          <div class="flex items-center justify-between">
+            <span class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider font-mono">Features</span>
+            <span class="material-symbols-outlined text-[20px] text-tertiary">square_foot</span>
+          </div>
+          <div class="my-3">
+            <span class="font-headline-md text-3xl font-bold text-on-surface font-mono">4</span>
+            <span class="font-label-sm text-label-sm text-on-surface-variant ml-1 font-mono">Dimensions</span>
+          </div>
+          <div class="flex flex-col gap-1 font-label-sm text-xs font-mono text-outline">
+            <div class="flex justify-between items-center bg-surface-container-lowest/50 px-2 py-0.5 rounded">
+              <span>Sepal L / W</span>
+              <span class="text-on-surface-variant">cm</span>
+            </div>
+            <div class="flex justify-between items-center bg-surface-container-lowest/50 px-2 py-0.5 rounded">
+              <span>Petal L / W</span>
+              <span class="text-on-surface-variant">cm</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Card 4: Model Validation Accuracy -->
+        <div class="flex flex-col justify-between p-5 rounded-xl bg-surface-container border border-surface-container-high/60 shadow-md">
+          <div class="flex items-center justify-between">
+            <span class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider font-mono">Accuracy</span>
+            <span class="inline-flex items-center px-2 py-0.5 rounded bg-tertiary-container/30 text-tertiary font-label-sm text-xs font-mono font-medium">k-NN</span>
+          </div>
+          <div class="flex items-center gap-3 my-2">
+            <div class="relative w-12 h-12 flex-shrink-0 flex items-center justify-center">
+              <svg class="w-12 h-12 transform -rotate-90" viewBox="0 0 36 36">
+                <path class="text-surface-container-highest" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="currentColor" stroke-width="3.5"></path>
+                <path class="text-tertiary" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="currentColor" stroke-dasharray="96.7, 100" stroke-linecap="round" stroke-width="3.5"></path>
+              </svg>
+              <span id="bento-acc-ring" class="absolute text-[11px] font-bold font-mono text-on-surface">96.7%</span>
+            </div>
+            <div class="flex flex-col min-w-0">
+              <span class="font-label-sm text-label-sm text-tertiary font-medium">High Match</span>
+              <span class="font-label-sm text-[11px] text-outline font-mono truncate">Stratified Split</span>
+            </div>
+          </div>
+          <div class="font-label-sm text-[11px] text-outline font-mono">
+            Loss: <span class="text-on-surface font-medium">0.033</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Main Overview Content Grid (2 Columns on Desktop) -->
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        
+        <!-- Left: Quick Predict Launcher Card (7 Cols) -->
+        <div class="lg:col-span-7 p-6 rounded-2xl bg-surface-container-high border border-surface-container-highest/60 shadow-xl flex flex-col space-y-4">
+          <div class="flex items-center justify-between">
+            <div class="flex items-center gap-2.5">
+              <div class="w-9 h-9 rounded-xl bg-primary-container/30 flex items-center justify-center text-primary">
+                <span class="material-symbols-outlined text-[20px]">tune</span>
+              </div>
+              <div>
+                <h2 class="font-headline-sm text-lg text-on-surface font-semibold">Quick Inference Launcher</h2>
+                <p class="font-body-sm text-xs text-on-surface-variant">Scrub feature sliders for instant vector classification</p>
+              </div>
+            </div>
+            <span class="font-label-sm text-xs px-2.5 py-1 rounded bg-surface-container-lowest text-primary font-mono font-medium">Live</span>
+          </div>
+
+          <!-- 4 Quick Sliders -->
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 bg-surface-container-lowest/60 p-4 rounded-xl border border-surface-container-highest/30">
+            <!-- Sepal Length -->
+            <div class="space-y-1.5">
+              <div class="flex justify-between font-label-sm text-xs font-mono">
+                <span class="text-on-surface-variant">Sepal Length</span>
+                <span class="text-primary font-semibold" id="quick-sl-val">5.8 cm</span>
+              </div>
+              <input id="quick-sl" type="range" min="4.0" max="8.0" step="0.1" value="5.8" class="w-full h-1.5 cursor-pointer accent-primary" oninput="handleQuickSliderChange()"/>
+            </div>
+
+            <!-- Sepal Width -->
+            <div class="space-y-1.5">
+              <div class="flex justify-between font-label-sm text-xs font-mono">
+                <span class="text-on-surface-variant">Sepal Width</span>
+                <span class="text-primary font-semibold" id="quick-sw-val">3.0 cm</span>
+              </div>
+              <input id="quick-sw" type="range" min="2.0" max="4.5" step="0.1" value="3.0" class="w-full h-1.5 cursor-pointer accent-primary" oninput="handleQuickSliderChange()"/>
+            </div>
+
+            <!-- Petal Length -->
+            <div class="space-y-1.5">
+              <div class="flex justify-between font-label-sm text-xs font-mono">
+                <span class="text-on-surface-variant">Petal Length</span>
+                <span class="text-secondary font-semibold" id="quick-pl-val">4.3 cm</span>
+              </div>
+              <input id="quick-pl" type="range" min="1.0" max="7.0" step="0.1" value="4.3" class="w-full h-1.5 cursor-pointer accent-secondary" oninput="handleQuickSliderChange()"/>
+            </div>
+
+            <!-- Petal Width -->
+            <div class="space-y-1.5">
+              <div class="flex justify-between font-label-sm text-xs font-mono">
+                <span class="text-on-surface-variant">Petal Width</span>
+                <span class="text-secondary font-semibold" id="quick-pw-val">1.3 cm</span>
+              </div>
+              <input id="quick-pw" type="range" min="0.1" max="2.5" step="0.1" value="1.3" class="w-full h-1.5 cursor-pointer accent-secondary" oninput="handleQuickSliderChange()"/>
+            </div>
+          </div>
+
+          <!-- Dynamic Target Result Box -->
+          <div id="quick-result-box" class="flex items-center justify-between p-3.5 rounded-xl bg-surface-container-lowest border border-surface-container-high transition-all">
+            <div class="flex items-center gap-3">
+              <span id="quick-result-icon" class="material-symbols-outlined text-secondary text-[24px]">psychology</span>
+              <div class="flex flex-col">
+                <span class="font-label-sm text-[11px] text-outline font-mono uppercase">Projected Taxon</span>
+                <span id="quick-result-title" class="font-headline-sm text-base text-secondary font-semibold">Iris Versicolor</span>
+              </div>
+            </div>
+            <div class="text-right font-mono">
+              <span id="quick-result-conf" class="font-label-sm text-sm text-tertiary font-bold">94.8% Conf</span>
+              <div id="quick-result-meta" class="font-label-sm text-[11px] text-outline">Cluster Dist: 0.16σ</div>
+            </div>
+          </div>
+
+          <button onclick="triggerQuickPrediction()" class="w-full py-3 px-4 rounded-xl bg-gradient-to-r from-primary-container via-primary to-primary-container text-surface-dim font-label-lg text-sm font-semibold flex items-center justify-center gap-2 shadow-lg shadow-primary/20 hover:opacity-95 active:scale-[0.99] transition-all">
+            <span class="material-symbols-outlined text-[18px]">bolt</span>
+            <span>Run Real-time Prediction</span>
+          </button>
+        </div>
+
+        <!-- Right: Taxonomic Classes & Shortcuts (5 Cols) -->
+        <div class="lg:col-span-5 flex flex-col space-y-4">
+          
+          <!-- 3 Species Mini Cards -->
+          <div class="p-5 rounded-2xl bg-surface-container border border-surface-container-high/60 shadow-md flex flex-col space-y-3">
+            <div class="flex items-center justify-between">
+              <div class="flex items-center gap-2">
+                <span class="material-symbols-outlined text-primary text-[18px]">donut_small</span>
+                <h2 class="font-headline-sm text-base text-on-surface font-semibold">Taxonomic Classes</h2>
+              </div>
+              <span class="font-label-sm text-[11px] text-outline font-mono">150 Balanced</span>
+            </div>
+
+            <!-- Setosa Card -->
+            <div class="p-3 rounded-xl bg-surface-container-low flex items-center justify-between border border-surface-container-high/40 hover:border-primary/40 transition-colors">
+              <div class="flex items-center gap-3 min-w-0">
+                <div class="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center flex-shrink-0">
+                  <span class="w-3 h-3 rounded-full bg-primary"></span>
+                </div>
+                <div class="flex flex-col min-w-0">
+                  <div class="flex items-center gap-1.5">
+                    <span class="font-body-md text-sm text-on-surface font-semibold">Iris Setosa</span>
+                    <span class="px-1.5 py-0.2 rounded bg-surface-container-high text-primary font-label-sm text-[10px] font-mono">Cluster A</span>
+                  </div>
+                  <p class="font-body-sm text-xs text-on-surface-variant truncate">Linearly separable, distinctive short petals</p>
+                </div>
+              </div>
+              <div class="text-right pl-2 font-mono flex-shrink-0">
+                <span class="font-label-md text-xs text-on-surface font-bold">50</span>
+                <span class="font-label-sm text-[10px] text-outline block">33.3%</span>
+              </div>
+            </div>
+
+            <!-- Versicolor Card -->
+            <div class="p-3 rounded-xl bg-surface-container-low flex items-center justify-between border border-surface-container-high/40 hover:border-secondary/40 transition-colors">
+              <div class="flex items-center gap-3 min-w-0">
+                <div class="w-8 h-8 rounded-full bg-secondary/20 flex items-center justify-center flex-shrink-0">
+                  <span class="w-3 h-3 rounded-full bg-secondary"></span>
+                </div>
+                <div class="flex flex-col min-w-0">
+                  <div class="flex items-center gap-1.5">
+                    <span class="font-body-md text-sm text-on-surface font-semibold">Iris Versicolor</span>
+                    <span class="px-1.5 py-0.2 rounded bg-surface-container-high text-secondary font-label-sm text-[10px] font-mono">Cluster B</span>
+                  </div>
+                  <p class="font-body-sm text-xs text-on-surface-variant truncate">Intermediate petal width-to-length ratio</p>
+                </div>
+              </div>
+              <div class="text-right pl-2 font-mono flex-shrink-0">
+                <span class="font-label-md text-xs text-on-surface font-bold">50</span>
+                <span class="font-label-sm text-[10px] text-outline block">33.3%</span>
+              </div>
+            </div>
+
+            <!-- Virginica Card -->
+            <div class="p-3 rounded-xl bg-surface-container-low flex items-center justify-between border border-surface-container-high/40 hover:border-tertiary/40 transition-colors">
+              <div class="flex items-center gap-3 min-w-0">
+                <div class="w-8 h-8 rounded-full bg-tertiary/20 flex items-center justify-center flex-shrink-0">
+                  <span class="w-3 h-3 rounded-full bg-tertiary"></span>
+                </div>
+                <div class="flex flex-col min-w-0">
+                  <div class="flex items-center gap-1.5">
+                    <span class="font-body-md text-sm text-on-surface font-semibold">Iris Virginica</span>
+                    <span class="px-1.5 py-0.2 rounded bg-surface-container-high text-tertiary font-label-sm text-[10px] font-mono">Cluster C</span>
+                  </div>
+                  <p class="font-body-sm text-xs text-on-surface-variant truncate">Large robust petals, boundary overlap region</p>
+                </div>
+              </div>
+              <div class="text-right pl-2 font-mono flex-shrink-0">
+                <span class="font-label-md text-xs text-on-surface font-bold">50</span>
+                <span class="font-label-sm text-[10px] text-outline block">33.3%</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Deep Dive Navigation Shortcuts -->
+          <div class="grid grid-cols-2 gap-3">
+            <div onclick="switchTab('analytics')" class="p-4 rounded-xl bg-surface-container hover:bg-surface-container-high border border-surface-container-high/60 transition-all cursor-pointer group shadow-sm flex flex-col justify-between">
+              <div class="flex items-center justify-between">
+                <span class="w-8 h-8 rounded-lg bg-surface-container-high flex items-center justify-center text-primary group-hover:scale-105 transition-transform">
+                  <span class="material-symbols-outlined text-[18px]">scatter_plot</span>
+                </span>
+                <span class="material-symbols-outlined text-outline-variant text-[16px] group-hover:translate-x-0.5 transition-transform">arrow_forward</span>
+              </div>
+              <div class="pt-3">
+                <span class="font-headline-sm text-sm text-on-surface font-semibold block">PCA &amp; 2D Space</span>
+                <span class="font-body-sm text-xs text-on-surface-variant">Cluster projections</span>
+              </div>
+            </div>
+
+            <div onclick="switchTab('performance')" class="p-4 rounded-xl bg-surface-container hover:bg-surface-container-high border border-surface-container-high/60 transition-all cursor-pointer group shadow-sm flex flex-col justify-between">
+              <div class="flex items-center justify-between">
+                <span class="w-8 h-8 rounded-lg bg-surface-container-high flex items-center justify-center text-secondary group-hover:scale-105 transition-transform">
+                  <span class="material-symbols-outlined text-[18px]">grid_on</span>
+                </span>
+                <span class="material-symbols-outlined text-outline-variant text-[16px] group-hover:translate-x-0.5 transition-transform">arrow_forward</span>
+              </div>
+              <div class="pt-3">
+                <span class="font-headline-sm text-sm text-on-surface font-semibold block">Confusion Matrix</span>
+                <span class="font-body-sm text-xs text-on-surface-variant">Precision &amp; Recall</span>
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+      </div>
+
+      <!-- Recent Inferences Feed Section -->
+      <div class="flex flex-col space-y-3 p-5 rounded-2xl bg-surface-container border border-surface-container-high/60 shadow-md">
+        <div class="flex items-center justify-between">
+          <div class="flex items-center gap-2">
+            <span class="material-symbols-outlined text-secondary text-[18px]">history</span>
+            <h2 class="font-headline-sm text-base text-on-surface font-semibold">Recent Specimen Inferences</h2>
+          </div>
+          <button onclick="clearRecentFeed()" class="font-label-sm text-xs text-primary font-mono hover:underline">Clear Feed</button>
+        </div>
+        <div id="recent-inferences-list" class="flex flex-col space-y-2">
+          <!-- Dynamic Items inserted via JS -->
+        </div>
+      </div>
+
+    </section>
+
+    <!-- ================= VIEW 2: PREDICT (INFERENCE STUDIO) ================= -->
+    <section id="view-predict" class="view-section flex-col space-y-6 w-full">
+      
+      <!-- Studio Header Banner -->
+      <div class="relative w-full overflow-hidden rounded-2xl bg-surface-container-lowest p-6 shadow-xl border border-surface-container-high/60">
+        <div class="absolute -top-12 -right-12 w-48 h-48 rounded-full bg-primary-container/15 blur-3xl pointer-events-none"></div>
+        <div class="absolute -bottom-16 -left-12 w-48 h-48 rounded-full bg-secondary-container/20 blur-2xl pointer-events-none"></div>
+        
+        <div class="relative flex flex-col gap-2 z-10">
+          <div class="flex flex-wrap items-center justify-between gap-2">
+            <span class="font-label-sm text-xs text-primary uppercase tracking-wider font-mono flex items-center gap-1.5">
+              <span class="w-2 h-2 rounded-full bg-primary animate-pulse"></span>
+              Real-time Inference Studio
+            </span>
+            <div class="flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-surface-container-high text-on-surface-variant font-label-sm text-xs font-mono">
+              <span class="material-symbols-outlined text-[14px] text-tertiary">bolt</span>
+              <span id="predict-latency-chip">Latency: 0.8ms</span>
+            </div>
+          </div>
+          <h1 class="font-headline-lg text-2xl md:text-3xl text-on-surface font-semibold tracking-tight">Predict Iris Species</h1>
+          <p class="font-body-sm text-sm text-on-surface-variant max-w-3xl">
+            Input botanical morphological dimensions below or click standard benchmark presets to compute class probabilities, decision distances, and morphological archetype ratios.
+          </p>
+
+          <!-- Preset Selectors -->
+          <div class="mt-3 flex flex-col gap-2">
+            <span class="font-label-sm text-xs text-on-surface-variant uppercase font-mono">Benchmark Presets:</span>
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+              <button onclick="loadPreset('setosa')" type="button" class="preset-btn p-2.5 rounded-xl bg-surface-container hover:bg-surface-container-high active:scale-95 transition-all text-left border border-surface-container-high/60 shadow-sm">
+                <div class="font-label-sm text-xs text-primary font-semibold font-mono flex items-center gap-1.5">
+                  <span class="w-2 h-2 rounded-full bg-primary"></span>
+                  Iris Setosa
+                </div>
+                <div class="font-label-sm text-[11px] text-on-surface-variant font-mono mt-0.5">5.1 / 3.5 / 1.4 / 0.2 cm</div>
+              </button>
+
+              <button onclick="loadPreset('versicolor')" type="button" class="preset-btn p-2.5 rounded-xl bg-surface-container hover:bg-surface-container-high active:scale-95 transition-all text-left border border-surface-container-high/60 shadow-sm">
+                <div class="font-label-sm text-xs text-secondary font-semibold font-mono flex items-center gap-1.5">
+                  <span class="w-2 h-2 rounded-full bg-secondary"></span>
+                  Iris Versicolor
+                </div>
+                <div class="font-label-sm text-[11px] text-on-surface-variant font-mono mt-0.5">6.0 / 2.8 / 4.5 / 1.4 cm</div>
+              </button>
+
+              <button onclick="loadPreset('virginica')" type="button" class="preset-btn p-2.5 rounded-xl bg-surface-container hover:bg-surface-container-high active:scale-95 transition-all text-left border border-surface-container-high/60 shadow-sm">
+                <div class="font-label-sm text-xs text-tertiary font-semibold font-mono flex items-center gap-1.5">
+                  <span class="w-2 h-2 rounded-full bg-tertiary"></span>
+                  Iris Virginica
+                </div>
+                <div class="font-label-sm text-[11px] text-on-surface-variant font-mono mt-0.5">6.7 / 3.1 / 5.6 / 2.4 cm</div>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Studio Work Area: Inputs (Left) and Prediction Output (Right) -->
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        
+        <!-- Measurement Matrix Inputs (6 Cols) -->
+        <div class="lg:col-span-6 flex flex-col space-y-4">
+          
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+            <!-- Sepal Length -->
+            <div class="flex flex-col justify-between p-4 rounded-xl bg-surface-container-low border border-surface-container-high/60 shadow-md">
+              <div class="flex items-center justify-between mb-1">
+                <span class="font-label-sm text-xs text-on-surface-variant flex items-center gap-1.5 font-mono">
+                  <span class="material-symbols-outlined text-[15px] text-primary">straighten</span>
+                  Sepal L.
+                </span>
+                <span class="font-label-sm text-[10px] text-outline font-mono">4.3 - 7.9</span>
+              </div>
+              <div class="flex items-center justify-between gap-2 my-2">
+                <button onclick="stepSlider('sl', -0.1)" type="button" class="w-8 h-8 rounded-lg bg-surface-container-high hover:bg-surface-container-highest text-on-surface font-semibold flex items-center justify-center active:scale-90 transition-transform">−</button>
+                <div class="flex items-baseline justify-center font-mono">
+                  <span id="display-sl" class="font-headline-sm text-2xl font-semibold text-on-surface">5.1</span>
+                  <span class="font-label-sm text-xs text-outline ml-1">cm</span>
+                </div>
+                <button onclick="stepSlider('sl', 0.1)" type="button" class="w-8 h-8 rounded-lg bg-surface-container-high hover:bg-surface-container-highest text-on-surface font-semibold flex items-center justify-center active:scale-90 transition-transform">+</button>
+              </div>
+              <input id="slider-sl" type="range" min="4.3" max="7.9" step="0.1" value="5.1" class="w-full h-1.5 cursor-pointer accent-primary" oninput="handleStudioSliderChange()"/>
+              <div class="flex justify-between text-[10px] font-mono text-outline-variant mt-1.5">
+                <span>Min: 4.3</span>
+                <span class="text-primary font-medium">Mean: 5.8</span>
+                <span>Max: 7.9</span>
+              </div>
+            </div>
+
+            <!-- Sepal Width -->
+            <div class="flex flex-col justify-between p-4 rounded-xl bg-surface-container-low border border-surface-container-high/60 shadow-md">
+              <div class="flex items-center justify-between mb-1">
+                <span class="font-label-sm text-xs text-on-surface-variant flex items-center gap-1.5 font-mono">
+                  <span class="material-symbols-outlined text-[15px] text-primary">unfold_more</span>
+                  Sepal W.
+                </span>
+                <span class="font-label-sm text-[10px] text-outline font-mono">2.0 - 4.4</span>
+              </div>
+              <div class="flex items-center justify-between gap-2 my-2">
+                <button onclick="stepSlider('sw', -0.1)" type="button" class="w-8 h-8 rounded-lg bg-surface-container-high hover:bg-surface-container-highest text-on-surface font-semibold flex items-center justify-center active:scale-90 transition-transform">−</button>
+                <div class="flex items-baseline justify-center font-mono">
+                  <span id="display-sw" class="font-headline-sm text-2xl font-semibold text-on-surface">3.5</span>
+                  <span class="font-label-sm text-xs text-outline ml-1">cm</span>
+                </div>
+                <button onclick="stepSlider('sw', 0.1)" type="button" class="w-8 h-8 rounded-lg bg-surface-container-high hover:bg-surface-container-highest text-on-surface font-semibold flex items-center justify-center active:scale-90 transition-transform">+</button>
+              </div>
+              <input id="slider-sw" type="range" min="2.0" max="4.4" step="0.1" value="3.5" class="w-full h-1.5 cursor-pointer accent-primary" oninput="handleStudioSliderChange()"/>
+              <div class="flex justify-between text-[10px] font-mono text-outline-variant mt-1.5">
+                <span>Min: 2.0</span>
+                <span class="text-primary font-medium">Mean: 3.1</span>
+                <span>Max: 4.4</span>
+              </div>
+            </div>
+
+            <!-- Petal Length -->
+            <div class="flex flex-col justify-between p-4 rounded-xl bg-surface-container-low border border-surface-container-high/60 shadow-md">
+              <div class="flex items-center justify-between mb-1">
+                <span class="font-label-sm text-xs text-on-surface-variant flex items-center gap-1.5 font-mono">
+                  <span class="material-symbols-outlined text-[15px] text-secondary">straighten</span>
+                  Petal L.
+                </span>
+                <span class="font-label-sm text-[10px] text-outline font-mono">1.0 - 6.9</span>
+              </div>
+              <div class="flex items-center justify-between gap-2 my-2">
+                <button onclick="stepSlider('pl', -0.1)" type="button" class="w-8 h-8 rounded-lg bg-surface-container-high hover:bg-surface-container-highest text-on-surface font-semibold flex items-center justify-center active:scale-90 transition-transform">−</button>
+                <div class="flex items-baseline justify-center font-mono">
+                  <span id="display-pl" class="font-headline-sm text-2xl font-semibold text-on-surface">1.4</span>
+                  <span class="font-label-sm text-xs text-outline ml-1">cm</span>
+                </div>
+                <button onclick="stepSlider('pl', 0.1)" type="button" class="w-8 h-8 rounded-lg bg-surface-container-high hover:bg-surface-container-highest text-on-surface font-semibold flex items-center justify-center active:scale-90 transition-transform">+</button>
+              </div>
+              <input id="slider-pl" type="range" min="1.0" max="6.9" step="0.1" value="1.4" class="w-full h-1.5 cursor-pointer accent-secondary" oninput="handleStudioSliderChange()"/>
+              <div class="flex justify-between text-[10px] font-mono text-outline-variant mt-1.5">
+                <span>Min: 1.0</span>
+                <span class="text-secondary font-medium">Mean: 3.8</span>
+                <span>Max: 6.9</span>
+              </div>
+            </div>
+
+            <!-- Petal Width -->
+            <div class="flex flex-col justify-between p-4 rounded-xl bg-surface-container-low border border-surface-container-high/60 shadow-md">
+              <div class="flex items-center justify-between mb-1">
+                <span class="font-label-sm text-xs text-on-surface-variant flex items-center gap-1.5 font-mono">
+                  <span class="material-symbols-outlined text-[15px] text-secondary">unfold_more</span>
+                  Petal W.
+                </span>
+                <span class="font-label-sm text-[10px] text-outline font-mono">0.1 - 2.5</span>
+              </div>
+              <div class="flex items-center justify-between gap-2 my-2">
+                <button onclick="stepSlider('pw', -0.1)" type="button" class="w-8 h-8 rounded-lg bg-surface-container-high hover:bg-surface-container-highest text-on-surface font-semibold flex items-center justify-center active:scale-90 transition-transform">−</button>
+                <div class="flex items-baseline justify-center font-mono">
+                  <span id="display-pw" class="font-headline-sm text-2xl font-semibold text-on-surface">0.2</span>
+                  <span class="font-label-sm text-xs text-outline ml-1">cm</span>
+                </div>
+                <button onclick="stepSlider('pw', 0.1)" type="button" class="w-8 h-8 rounded-lg bg-surface-container-high hover:bg-surface-container-highest text-on-surface font-semibold flex items-center justify-center active:scale-90 transition-transform">+</button>
+              </div>
+              <input id="slider-pw" type="range" min="0.1" max="2.5" step="0.1" value="0.2" class="w-full h-1.5 cursor-pointer accent-secondary" oninput="handleStudioSliderChange()"/>
+              <div class="flex justify-between text-[10px] font-mono text-outline-variant mt-1.5">
+                <span>Min: 0.1</span>
+                <span class="text-secondary font-medium">Mean: 1.2</span>
+                <span>Max: 2.5</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Action Buttons -->
+          <div class="flex items-center gap-3">
+            <button onclick="triggerStudioPrediction()" type="button" class="flex-1 py-3 px-6 rounded-xl bg-gradient-to-r from-primary-container via-primary to-secondary text-surface-container-lowest font-headline-sm text-base font-semibold flex items-center justify-center gap-2 shadow-lg shadow-primary/20 hover:opacity-95 active:scale-95 transition-all">
+              <span class="material-symbols-outlined text-[20px]">psychology</span>
+              <span>Classify Flower Specimen</span>
+            </button>
+            <button onclick="loadPreset('setosa')" type="button" class="w-12 h-12 rounded-xl bg-surface-container hover:bg-surface-container-high border border-surface-container-high/60 flex items-center justify-center text-on-surface-variant hover:text-on-surface active:rotate-180 transition-all shadow-sm" title="Reset to defaults">
+              <span class="material-symbols-outlined text-[20px]">restart_alt</span>
+            </button>
+          </div>
+
+          <!-- Specimen Reference Gallery Cards -->
+          <div class="flex flex-col gap-2 pt-2">
+            <span class="font-label-sm text-xs text-on-surface-variant uppercase font-mono">Specimen Botanical Archetypes</span>
+            <div class="grid grid-cols-3 gap-2.5">
+              <div onclick="loadPreset('setosa')" class="p-2.5 rounded-xl bg-surface-container hover:bg-surface-container-high border border-surface-container-high/60 flex flex-col items-center gap-1.5 cursor-pointer transition-all">
+                <img class="w-full h-16 object-cover rounded-lg" src="https://lh3.googleusercontent.com/aida-public/AB6AXuC8lfCxP6XetdyZCr7CAVBPVWTgE3a9aPFwJb84Sr4oniXmvAzqeTkMR5nFZuG-7UYo7fEwjr6aA7jVxsk2veauXSDafMSg8aXg6cBPTYt7AKbW7QlQaw3A8B_OUMWvfGH1PLRPUmVStw9Kd1nKxQdqlAEpTXnXa4WpoGfWlS-EElgozpKzt7rMDnHbTa7XCeRHJssgNTls87NiC1nq9XnTY2OVLEkIZd19ZdaNO2vnzw8PGwgEmZVK-Q" alt="Iris Setosa"/>
+                <span class="font-label-sm text-xs text-primary font-mono font-medium">Setosa</span>
+              </div>
+              <div onclick="loadPreset('versicolor')" class="p-2.5 rounded-xl bg-surface-container hover:bg-surface-container-high border border-surface-container-high/60 flex flex-col items-center gap-1.5 cursor-pointer transition-all">
+                <img class="w-full h-16 object-cover rounded-lg" src="https://lh3.googleusercontent.com/aida-public/AB6AXuB-_ropk3gnO5Buj9xwajnXzsk4JJMRc7dJCStwVWciD2IYO-x7WvYvmb9DsJ5cRrCZZ33K0jklE0Hm7vsyZCp6IzQHIXtxNExBRk0bpfHASfShIBr5IIgZVRcir0waRYawYMyUajiHINN_TZDIGCwJOZ01OHNilH5WO6pQmHpOAJ9j0o0TWNsRd6n3Ho71JlDK-HTZKy8gnFlYCYwvrcvjJ0NJr9TKP6-pMAyuFTpuV92Eg1DvxVdYFA" alt="Iris Versicolor"/>
+                <span class="font-label-sm text-xs text-secondary font-mono font-medium">Versicolor</span>
+              </div>
+              <div onclick="loadPreset('virginica')" class="p-2.5 rounded-xl bg-surface-container hover:bg-surface-container-high border border-surface-container-high/60 flex flex-col items-center gap-1.5 cursor-pointer transition-all">
+                <img class="w-full h-16 object-cover rounded-lg" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCnYzXYc0axJeCvpfmAf8kKft2TkGZRIU6DapHDcvJDm-aI0jPgv0pOrajTLCjfNRNxAziSOyXZwwograQbA4P5hgQiuX5zsQ7C6PaSqDKcf6yIS4rQC9NQOvkZHSRLIIa-N8bTeCwy8aaSYUUboXcGp-2qpRnOkRkA8yD2VQm9vSeeSVv8HdgLID-NWy3Cs0vIiw2s51PEL5f58L1bFtt1718XoH6HKhtjOQQ4d12GB2oPy7yjChq9hA" alt="Iris Virginica"/>
+                <span class="font-label-sm text-xs text-tertiary font-mono font-medium">Virginica</span>
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- Prediction Result Display (6 Cols) -->
+        <div class="lg:col-span-6 flex flex-col space-y-4">
+          
+          <div id="prediction-card" class="relative rounded-2xl bg-surface-container-low p-6 shadow-xl border border-surface-container-high/60 overflow-hidden flex flex-col gap-4">
+            <!-- Dynamic Glowing Top Stripe -->
+            <div id="result-glow-stripe" class="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-primary via-primary-fixed to-primary-container"></div>
+            
+            <!-- Status Badges -->
+            <div class="flex items-center justify-between mt-1">
+              <span id="result-status-badge" class="px-3 py-1 rounded-full bg-primary/10 text-primary font-label-sm text-xs font-mono font-medium flex items-center gap-1.5 border border-primary/20">
+                <span class="w-2 h-2 rounded-full bg-primary animate-ping"></span>
+                Verified Class 0 • High Certainty
+              </span>
+              <span class="font-label-sm text-xs text-tertiary flex items-center gap-1 font-mono">
+                <span class="material-symbols-outlined text-[16px]">check_circle</span>
+                <span>Converged</span>
+              </span>
+            </div>
+
+            <!-- Predicted Species Readout -->
+            <div class="flex flex-col">
+              <span class="font-label-sm text-xs text-on-surface-variant uppercase font-mono tracking-wider">Identified Species</span>
+              <div class="flex items-baseline justify-between mt-0.5">
+                <h2 id="result-species-title" class="font-headline-lg text-3xl font-semibold text-primary">Iris Setosa</h2>
+                <span id="result-confidence-val" class="font-headline-sm text-2xl font-mono font-bold text-on-surface">99.4%</span>
+              </div>
+              <p id="result-species-desc" class="font-body-sm text-sm text-on-surface-variant mt-2 leading-relaxed">
+                Characterized by short, wide petals and prominent sepals. Readily distinguishable from Versicolor and Virginica due to strict linear separability in petal dimensions.
+              </p>
+            </div>
+
+            <!-- Morphological Diagram & Visual Guide -->
+            <div class="flex items-center gap-4 p-4 rounded-xl bg-surface-container-high/60 border border-surface-container-highest/30">
+              <div class="w-16 h-16 rounded-xl bg-surface-container flex items-center justify-center flex-shrink-0 text-primary shadow-inner">
+                <svg class="w-12 h-12" fill="none" viewBox="0 0 48 48">
+                  <circle cx="24" cy="24" fill="currentColor" fill-opacity="0.08" r="20"></circle>
+                  <ellipse cx="24" cy="18" fill="currentColor" fill-opacity="0.9" rx="5" ry="11"></ellipse>
+                  <path d="M24 24C16 26 12 36 12 40C18 40 24 32 24 24Z" fill="currentColor" fill-opacity="0.5"></path>
+                  <path d="M24 24C32 26 36 36 36 40C30 40 24 32 24 24Z" fill="currentColor" fill-opacity="0.5"></path>
+                  <path d="M24 24V44" stroke="#dfe2ee" stroke-linecap="round" stroke-width="2"></path>
+                  <circle cx="24" cy="24" fill="#dfe2ee" r="2"></circle>
+                </svg>
+              </div>
+              <div class="flex flex-col justify-center min-w-0">
+                <span class="font-label-sm text-xs text-on-surface font-semibold font-mono uppercase">Anatomical Archetype</span>
+                <div class="flex items-center gap-2 mt-1 text-outline text-xs font-mono">
+                  <span id="archetype-sepal">Sepal Ratio: 1.46</span>
+                  <span>•</span>
+                  <span id="archetype-petal">Petal Ratio: 7.00</span>
+                </div>
+                <span id="archetype-boundary" class="font-label-sm text-xs text-tertiary mt-1 font-mono">Boundary Distance: +3.24σ (Linear Safe)</span>
+              </div>
+            </div>
+
+            <!-- Softmax Logits Probability Distribution -->
+            <div class="flex flex-col gap-2.5 pt-1">
+              <div class="flex items-center justify-between font-label-sm text-xs text-on-surface-variant font-mono">
+                <span>Class Probability Mass</span>
+                <span>Softmax Logits</span>
+              </div>
+
+              <!-- Setosa Progress -->
+              <div class="flex flex-col gap-1 font-mono text-xs">
+                <div class="flex items-center justify-between">
+                  <span class="text-primary flex items-center gap-1.5 font-medium">
+                    <span class="w-2 h-2 rounded-full bg-primary"></span>
+                    Iris Setosa
+                  </span>
+                  <span id="prob-val-setosa" class="text-on-surface font-semibold">99.4%</span>
+                </div>
+                <div class="w-full h-2.5 rounded-full bg-surface-container-highest overflow-hidden">
+                  <div id="prob-bar-setosa" class="h-full bg-primary rounded-full transition-all duration-500 ease-out" style="width: 99.4%;"></div>
+                </div>
+              </div>
+
+              <!-- Versicolor Progress -->
+              <div class="flex flex-col gap-1 font-mono text-xs">
+                <div class="flex items-center justify-between">
+                  <span class="text-secondary flex items-center gap-1.5 font-medium">
+                    <span class="w-2 h-2 rounded-full bg-secondary"></span>
+                    Iris Versicolor
+                  </span>
+                  <span id="prob-val-versicolor" class="text-on-surface font-semibold">0.5%</span>
+                </div>
+                <div class="w-full h-2.5 rounded-full bg-surface-container-highest overflow-hidden">
+                  <div id="prob-bar-versicolor" class="h-full bg-secondary rounded-full transition-all duration-500 ease-out" style="width: 0.5%;"></div>
+                </div>
+              </div>
+
+              <!-- Virginica Progress -->
+              <div class="flex flex-col gap-1 font-mono text-xs">
+                <div class="flex items-center justify-between">
+                  <span class="text-tertiary flex items-center gap-1.5 font-medium">
+                    <span class="w-2 h-2 rounded-full bg-tertiary"></span>
+                    Iris Virginica
+                  </span>
+                  <span id="prob-val-virginica" class="text-on-surface font-semibold">0.1%</span>
+                </div>
+                <div class="w-full h-2.5 rounded-full bg-surface-container-highest overflow-hidden">
+                  <div id="prob-bar-virginica" class="h-full bg-tertiary rounded-full transition-all duration-500 ease-out" style="width: 0.1%;"></div>
+                </div>
+              </div>
+
+            </div>
+
+          </div>
+
+        </div>
+
+      </div>
+
+    </section>
+
+    <!-- ================= VIEW 3: ANALYTICS (DATASET ANALYTICS) ================= -->
+    <section id="view-analytics" class="view-section flex-col space-y-6 w-full">
+      
+      <!-- Analytics Header -->
+      <div class="flex flex-col gap-2">
+        <div class="flex items-center gap-2">
+          <span class="p-1.5 rounded-xl bg-surface-container-high text-primary flex items-center justify-center">
+            <span class="material-symbols-outlined text-[20px]">scatter_plot</span>
+          </span>
+          <h2 class="font-headline-lg text-2xl md:text-3xl text-on-surface font-semibold tracking-tight">Dataset Analytics &amp; Feature Space</h2>
+        </div>
+        <p class="font-body-sm text-sm text-on-surface-variant max-w-3xl">
+          Pairwise feature correlation and taxonomic cluster projections across Edgar Anderson's 150 Gaspé botanical specimens.
+        </p>
+      </div>
+
+      <!-- Species Interactive Legend Bar & Overview Stats -->
+      <div class="grid grid-cols-1 md:grid-cols-12 gap-4">
+        
+        <!-- Legend Buttons (7 Cols) -->
+        <div class="md:col-span-7 flex flex-wrap items-center justify-between gap-2 p-3.5 rounded-2xl bg-surface-container-low border border-surface-container-high/60 shadow-sm">
+          <button onclick="toggleScatterFilter('setosa')" id="filter-setosa" type="button" class="group flex items-center gap-2 px-3 py-1.5 rounded-xl bg-surface-container border border-primary/30 transition-all active:scale-95 shadow-sm">
+            <span class="w-2.5 h-2.5 rounded-full bg-primary shadow-[0_0_8px_rgba(6,182,212,0.8)]"></span>
+            <span class="font-label-sm text-xs text-on-surface font-medium font-mono">I. Setosa (50)</span>
+          </button>
+          <button onclick="toggleScatterFilter('versicolor')" id="filter-versicolor" type="button" class="group flex items-center gap-2 px-3 py-1.5 rounded-xl bg-surface-container border border-secondary/30 transition-all active:scale-95 shadow-sm">
+            <span class="w-2.5 h-2.5 rounded-full bg-secondary shadow-[0_0_8px_rgba(139,92,246,0.8)]"></span>
+            <span class="font-label-sm text-xs text-on-surface font-medium font-mono">I. Versicolor (50)</span>
+          </button>
+          <button onclick="toggleScatterFilter('virginica')" id="filter-virginica" type="button" class="group flex items-center gap-2 px-3 py-1.5 rounded-xl bg-surface-container border border-tertiary/30 transition-all active:scale-95 shadow-sm">
+            <span class="w-2.5 h-2.5 rounded-full bg-tertiary shadow-[0_0_8px_rgba(16,185,129,0.8)]"></span>
+            <span class="font-label-sm text-xs text-on-surface font-medium font-mono">I. Virginica (50)</span>
+          </button>
+        </div>
+
+        <!-- Split Cards (5 Cols) -->
+        <div class="md:col-span-5 grid grid-cols-2 gap-3">
+          <div class="flex flex-col p-3.5 rounded-2xl bg-surface-container border border-surface-container-high/60 shadow-sm">
+            <span class="font-label-sm text-xs text-on-surface-variant font-mono">Total Instances</span>
+            <div class="flex items-baseline gap-1 mt-1">
+              <span class="font-headline-md text-xl font-bold text-on-surface font-mono">150</span>
+              <span class="font-label-sm text-xs text-tertiary font-mono">vectors</span>
+            </div>
+            <span class="font-label-sm text-[10px] text-on-surface-variant mt-1 font-mono">80 / 20 split ratio</span>
+          </div>
+
+          <div class="flex flex-col p-3.5 rounded-2xl bg-surface-container border border-surface-container-high/60 shadow-sm">
+            <span class="font-label-sm text-xs text-on-surface-variant font-mono">Taxonomy Ratio</span>
+            <div class="flex items-baseline gap-1 mt-1">
+              <span class="font-headline-md text-xl font-bold text-on-surface font-mono">33.3%</span>
+              <span class="font-label-sm text-xs text-on-surface-variant font-mono">each</span>
+            </div>
+            <span class="font-label-sm text-[10px] text-tertiary mt-1 font-mono">Strict balance 1:1:1</span>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- High-Fidelity Scatter Plot 1: Petal Length vs Petal Width -->
+      <div class="flex flex-col p-6 rounded-2xl bg-surface-container-low border border-surface-container-high/60 shadow-md space-y-4">
+        <div class="flex flex-wrap items-center justify-between gap-2">
+          <div>
+            <span class="font-headline-sm text-lg text-on-surface font-semibold">Petal Dimensions: Length vs Width</span>
+            <p class="font-label-sm text-xs text-on-surface-variant font-mono">Strongest Linear Discriminant • Pearson r = +0.96</p>
+          </div>
+          <span class="px-3 py-1 rounded-full bg-surface-container-high font-label-sm text-xs text-primary font-mono border border-primary/20">r = +0.96 (p &lt; 0.001)</span>
+        </div>
+
+        <!-- Separation Hint Pill -->
+        <div class="flex items-center gap-2 p-2.5 rounded-xl bg-surface-container-highest/40 border border-surface-container-highest">
+          <span class="material-symbols-outlined text-primary text-[18px]">verified</span>
+          <span class="font-label-sm text-xs text-on-surface">Setosa forms a linearly isolated cluster in bottom-left (Petal L &lt; 2.5cm). Versicolor and Virginica demonstrate subtle boundary curvature.</span>
+        </div>
+
+        <!-- SVG Scatter Plot Canvas -->
+        <div class="relative w-full rounded-xl bg-surface-container-lowest p-4 overflow-hidden border border-surface-container-high/40">
+          <!-- Floating Interactive Tooltip -->
+          <div id="petal-tooltip" class="absolute hidden z-20 px-3 py-1.5 rounded-lg bg-surface-bright/95 border border-surface-container-highest text-on-surface shadow-xl pointer-events-none transform -translate-x-1/2 -translate-y-full transition-all">
+            <span id="petal-tooltip-text" class="font-label-sm text-xs font-mono">L: 1.4 cm | W: 0.2 cm</span>
+          </div>
+
+          <svg id="petal-scatter-svg" class="w-full h-auto select-none" viewBox="0 0 600 320" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+              <linearGradient id="setosaSep" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stop-color="#06B6D4" stop-opacity="0.25"/>
+                <stop offset="100%" stop-color="#06B6D4" stop-opacity="0.02"/>
+              </linearGradient>
+              <linearGradient id="versicolorZoneGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stop-color="#8B5CF6" stop-opacity="0.20"/>
+                <stop offset="100%" stop-color="#8B5CF6" stop-opacity="0.02"/>
+              </linearGradient>
+              <linearGradient id="virginicaZoneGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stop-color="#10B981" stop-opacity="0.20"/>
+                <stop offset="100%" stop-color="#10B981" stop-opacity="0.02"/>
+              </linearGradient>
+            </defs>
+
+            <!-- Gridlines -->
+            <line x1="50" y1="30" x2="570" y2="30" stroke="#262a33" stroke-dasharray="3,3" stroke-width="1"/>
+            <line x1="50" y1="90" x2="570" y2="90" stroke="#262a33" stroke-dasharray="3,3" stroke-width="1"/>
+            <line x1="50" y1="150" x2="570" y2="150" stroke="#262a33" stroke-dasharray="3,3" stroke-width="1"/>
+            <line x1="50" y1="210" x2="570" y2="210" stroke="#262a33" stroke-dasharray="3,3" stroke-width="1"/>
+            <line x1="50" y1="270" x2="570" y2="270" stroke="#3d494c" stroke-width="1.5"/>
+            <line x1="50" y1="30" x2="50" y2="270" stroke="#3d494c" stroke-width="1.5"/>
+            <line x1="180" y1="30" x2="180" y2="270" stroke="#262a33" stroke-dasharray="3,3" stroke-width="1"/>
+            <line x1="310" y1="30" x2="310" y2="270" stroke="#262a33" stroke-dasharray="3,3" stroke-width="1"/>
+            <line x1="440" y1="30" x2="440" y2="270" stroke="#262a33" stroke-dasharray="3,3" stroke-width="1"/>
+            <line x1="570" y1="30" x2="570" y2="270" stroke="#262a33" stroke-width="1"/>
+
+            <!-- Y Axis Units (Petal Width: 0 to 2.5 cm) -->
+            <text x="38" y="274" fill="#869397" font-family="JetBrains Mono" font-size="10" text-anchor="end">0.0</text>
+            <text x="38" y="214" fill="#869397" font-family="JetBrains Mono" font-size="10" text-anchor="end">0.8</text>
+            <text x="38" y="154" fill="#869397" font-family="JetBrains Mono" font-size="10" text-anchor="end">1.4</text>
+            <text x="38" y="94" fill="#869397" font-family="JetBrains Mono" font-size="10" text-anchor="end">2.0</text>
+            <text x="38" y="34" fill="#869397" font-family="JetBrains Mono" font-size="10" text-anchor="end">2.6</text>
+
+            <!-- X Axis Units (Petal Length: 1.0 to 7.0 cm) -->
+            <text x="50" y="292" fill="#869397" font-family="JetBrains Mono" font-size="10" text-anchor="middle">1.0</text>
+            <text x="180" y="292" fill="#869397" font-family="JetBrains Mono" font-size="10" text-anchor="middle">2.5</text>
+            <text x="310" y="292" fill="#869397" font-family="JetBrains Mono" font-size="10" text-anchor="middle">4.0</text>
+            <text x="440" y="292" fill="#869397" font-family="JetBrains Mono" font-size="10" text-anchor="middle">5.5</text>
+            <text x="570" y="292" fill="#869397" font-family="JetBrains Mono" font-size="10" text-anchor="middle">7.0</text>
+
+            <!-- Axis Labels -->
+            <text x="310" y="312" fill="#bcc9cd" font-family="Geist" font-size="11" text-anchor="middle">Petal Length (cm)</text>
+            <text x="15" y="150" fill="#bcc9cd" font-family="Geist" font-size="11" text-anchor="middle" transform="rotate(-90 15,150)">Petal Width (cm)</text>
+
+            <!-- Cluster Hulls -->
+            <!-- Setosa Hull -->
+            <ellipse cx="95" cy="245" rx="40" ry="20" fill="url(#setosaSep)"/>
+            <line x1="175" y1="270" x2="175" y2="180" stroke="#06B6D4" stroke-dasharray="4,4" stroke-width="1.5" opacity="0.7"/>
+            <text x="180" y="195" fill="#06B6D4" font-family="JetBrains Mono" font-size="9">Linear Separation (L &lt; 2.45cm)</text>
+
+            <!-- Versicolor Hull -->
+            <ellipse cx="330" cy="165" rx="75" ry="38" fill="url(#versicolorZoneGrad)"/>
+
+            <!-- Virginica Hull -->
+            <ellipse cx="460" cy="95" rx="80" ry="45" fill="url(#virginicaZoneGrad)"/>
+
+            <!-- Dynamic Scatter Points populated by JS -->
+            <g id="scatter-setosa-group" fill="#06B6D4"></g>
+            <g id="scatter-versicolor-group" fill="#8B5CF6"></g>
+            <g id="scatter-virginica-group" fill="#10B981"></g>
+
+            <!-- Active Specimen Indicator Crosshair -->
+            <g id="scatter-current-crosshair" class="transition-all duration-300">
+              <circle id="crosshair-dot" cx="95" cy="245" r="7" fill="none" stroke="#FFFFFF" stroke-width="2"/>
+              <circle id="crosshair-center" cx="95" cy="245" r="2.5" fill="#FFFFFF"/>
+            </g>
+          </svg>
+        </div>
+      </div>
+
+    </section>
+
+    <!-- ================= VIEW 4: PERFORMANCE (MODEL METRICS) ================= -->
+    <section id="view-performance" class="view-section flex-col space-y-6 w-full">
+      
+      <!-- Performance Screen Header -->
+      <div class="flex flex-col gap-2">
+        <div class="flex items-center gap-2">
+          <span class="w-2 h-2 rounded-full bg-tertiary animate-pulse"></span>
+          <span class="font-label-sm text-xs text-tertiary uppercase tracking-wider font-mono">Evaluation Live Log</span>
+        </div>
+        <h1 class="font-headline-lg text-2xl md:text-3xl text-on-surface font-semibold tracking-tight">Model Performance &amp; Diagnostic Matrix</h1>
+        <p class="font-body-sm text-sm text-on-surface-variant max-w-3xl">
+          Multi-algorithm benchmark results, 3x3 normalized confusion matrix, and hyperparameter cross-validation tuning curves.
+        </p>
+      </div>
+
+      <!-- Model Meta Pill Strip -->
+      <div class="flex flex-wrap items-center gap-3">
+        <div class="flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-surface-container-high border border-surface-container-highest/40 shadow-sm font-mono text-xs">
+          <span class="material-symbols-outlined text-[16px] text-primary">memory</span>
+          <span class="text-on-surface-variant">Active Model:</span>
+          <span id="meta-model-name" class="text-on-surface font-semibold">KNN (k=3)</span>
+        </div>
+        <div class="flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-surface-container-high border border-surface-container-highest/40 shadow-sm font-mono text-xs">
+          <span class="material-symbols-outlined text-[16px] text-secondary">pie_chart</span>
+          <span class="text-on-surface-variant">Split:</span>
+          <span class="text-on-surface font-semibold">80 / 20 Stratified</span>
+        </div>
+        <div class="flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-surface-container-high border border-surface-container-highest/40 shadow-sm font-mono text-xs">
+          <span class="material-symbols-outlined text-[16px] text-tertiary">repeat</span>
+          <span class="text-on-surface-variant">Validation:</span>
+          <span class="text-on-surface font-semibold">5-Fold Stratified CV</span>
+        </div>
+      </div>
+
+      <!-- 4 Primary Metric Cards -->
+      <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        <!-- Accuracy -->
+        <div class="flex flex-col p-4 rounded-xl bg-surface-container-low border border-surface-container-high/60 shadow-md">
+          <div class="flex items-center justify-between">
+            <span class="font-label-sm text-xs text-on-surface-variant font-mono">Accuracy</span>
+            <span class="material-symbols-outlined text-[18px] text-primary">verified</span>
+          </div>
+          <div class="flex items-baseline gap-1 mt-1.5">
+            <span id="metric-acc" class="font-headline-md text-2xl md:text-3xl font-bold text-on-surface font-mono">96.7%</span>
+          </div>
+          <div class="w-full bg-surface-container-highest h-1.5 rounded-full mt-3 overflow-hidden">
+            <div id="bar-metric-acc" class="bg-primary h-full rounded-full" style="width: 96.7%"></div>
+          </div>
+        </div>
+
+        <!-- Precision -->
+        <div class="flex flex-col p-4 rounded-xl bg-surface-container-low border border-surface-container-high/60 shadow-md">
+          <div class="flex items-center justify-between">
+            <span class="font-label-sm text-xs text-on-surface-variant font-mono">Precision</span>
+            <span class="material-symbols-outlined text-[18px] text-secondary">center_focus_strong</span>
+          </div>
+          <div class="flex items-baseline gap-1 mt-1.5">
+            <span id="metric-prec" class="font-headline-md text-2xl md:text-3xl font-bold text-on-surface font-mono">97.1%</span>
+          </div>
+          <div class="w-full bg-surface-container-highest h-1.5 rounded-full mt-3 overflow-hidden">
+            <div id="bar-metric-prec" class="bg-secondary h-full rounded-full" style="width: 97.1%"></div>
+          </div>
+        </div>
+
+        <!-- Recall -->
+        <div class="flex flex-col p-4 rounded-xl bg-surface-container-low border border-surface-container-high/60 shadow-md">
+          <div class="flex items-center justify-between">
+            <span class="font-label-sm text-xs text-on-surface-variant font-mono">Recall</span>
+            <span class="material-symbols-outlined text-[18px] text-tertiary">track_changes</span>
+          </div>
+          <div class="flex items-baseline gap-1 mt-1.5">
+            <span id="metric-rec" class="font-headline-md text-2xl md:text-3xl font-bold text-on-surface font-mono">96.7%</span>
+          </div>
+          <div class="w-full bg-surface-container-highest h-1.5 rounded-full mt-3 overflow-hidden">
+            <div id="bar-metric-rec" class="bg-tertiary h-full rounded-full" style="width: 96.7%"></div>
+          </div>
+        </div>
+
+        <!-- F1 Score -->
+        <div class="flex flex-col p-4 rounded-xl bg-surface-container-low border border-surface-container-high/60 shadow-md">
+          <div class="flex items-center justify-between">
+            <span class="font-label-sm text-xs text-on-surface-variant font-mono">F1-Score</span>
+            <span class="material-symbols-outlined text-[18px] text-primary-fixed">balance</span>
+          </div>
+          <div class="flex items-baseline gap-1 mt-1.5">
+            <span id="metric-f1" class="font-headline-md text-2xl md:text-3xl font-bold text-on-surface font-mono">96.9%</span>
+          </div>
+          <div class="w-full bg-surface-container-highest h-1.5 rounded-full mt-3 overflow-hidden">
+            <div id="bar-metric-f1" class="bg-primary-fixed-dim h-full rounded-full" style="width: 96.9%"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Confusion Matrix & Species Diagnostics (2 Columns on Desktop) -->
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        
+        <!-- Left: Confusion Matrix (6 Cols) -->
+        <div class="lg:col-span-6 p-6 rounded-2xl bg-surface-container border border-surface-container-high/60 shadow-md flex flex-col space-y-4">
+          <div class="flex items-center justify-between">
+            <div>
+              <div class="flex items-center gap-2">
+                <span class="font-headline-sm text-lg font-semibold text-on-surface">Confusion Matrix</span>
+                <span class="px-2 py-0.5 rounded-full bg-surface-container-highest text-on-surface-variant font-label-sm text-xs font-mono">N=30 Test</span>
+              </div>
+              <span class="font-body-sm text-xs text-on-surface-variant">Normalized categorical cross-distribution</span>
+            </div>
+            <div class="w-8 h-8 rounded-full bg-surface-container-high flex items-center justify-center text-primary">
+              <span class="material-symbols-outlined text-[18px]">grid_on</span>
+            </div>
+          </div>
+
+          <!-- Misclassification Spotlight Banner -->
+          <div class="flex items-center gap-3 p-3 rounded-xl bg-surface-container-high border border-surface-container-highest/40 shadow-sm">
+            <div class="w-7 h-7 rounded-full bg-tertiary-container flex items-center justify-center shrink-0">
+              <span class="material-symbols-outlined text-[16px] text-on-tertiary-container font-bold">auto_awesome</span>
+            </div>
+            <p class="font-body-sm text-xs text-on-surface leading-tight">
+              <span class="font-semibold text-tertiary">High-precision convergence:</span> Only <strong id="misclass-count" class="text-error font-semibold font-mono">1</strong> boundary misclassification across 30 holdout test specimens.
+            </p>
+          </div>
+
+          <!-- 3x3 Grid Layout -->
+          <div class="flex flex-col w-full pt-2">
+            <div class="flex items-center justify-center mb-1.5">
+              <span class="font-label-sm text-xs text-primary uppercase tracking-wider font-mono font-semibold">Predicted Species →</span>
+            </div>
+            <div class="flex">
+              <!-- Actual Label Vertical -->
+              <div class="flex items-center justify-center pr-2 -rotate-90 origin-center select-none font-mono text-xs text-secondary font-semibold">
+                Actual →
+              </div>
+
+              <!-- Matrix Content -->
+              <div class="flex flex-col flex-1 min-w-0 font-mono">
+                <!-- Column Headers -->
+                <div class="grid grid-cols-3 text-center mb-2 gap-2 text-xs">
+                  <span class="text-primary font-medium truncate">Setosa</span>
+                  <span class="text-secondary font-medium truncate">Versicolor</span>
+                  <span class="text-tertiary font-medium truncate">Virginica</span>
+                </div>
+
+                <!-- Row 1: Actual Setosa -->
+                <div class="grid grid-cols-3 gap-2 mb-2">
+                  <div class="flex flex-col items-center justify-center p-3 rounded-xl bg-primary-container/30 border border-primary/40 relative">
+                    <span id="cm-0-0" class="font-label-lg text-lg font-bold text-primary">10</span>
+                    <span class="font-label-sm text-[10px] text-primary-fixed opacity-80">100%</span>
+                    <span class="absolute top-1.5 right-1.5 w-1.5 h-1.5 rounded-full bg-primary"></span>
+                  </div>
+                  <div class="flex flex-col items-center justify-center p-3 rounded-xl bg-surface-container-high/40">
+                    <span id="cm-0-1" class="font-label-lg text-base font-semibold text-outline-variant">0</span>
+                    <span class="font-label-sm text-[10px] text-outline-variant">0%</span>
+                  </div>
+                  <div class="flex flex-col items-center justify-center p-3 rounded-xl bg-surface-container-high/40">
+                    <span id="cm-0-2" class="font-label-lg text-base font-semibold text-outline-variant">0</span>
+                    <span class="font-label-sm text-[10px] text-outline-variant">0%</span>
+                  </div>
+                </div>
+
+                <!-- Row 2: Actual Versicolor -->
+                <div class="grid grid-cols-3 gap-2 mb-2">
+                  <div class="flex flex-col items-center justify-center p-3 rounded-xl bg-surface-container-high/40">
+                    <span id="cm-1-0" class="font-label-lg text-base font-semibold text-outline-variant">0</span>
+                    <span class="font-label-sm text-[10px] text-outline-variant">0%</span>
+                  </div>
+                  <div class="flex flex-col items-center justify-center p-3 rounded-xl bg-secondary-container/50 border border-secondary/40 relative">
+                    <span id="cm-1-1" class="font-label-lg text-lg font-bold text-secondary">9</span>
+                    <span class="font-label-sm text-[10px] text-secondary-fixed opacity-90">90%</span>
+                    <span class="absolute top-1.5 right-1.5 w-1.5 h-1.5 rounded-full bg-secondary"></span>
+                  </div>
+                  <div class="flex flex-col items-center justify-center p-3 rounded-xl bg-error-container/60 border border-error/40 relative">
+                    <span id="cm-1-2" class="font-label-lg text-lg font-bold text-error">1</span>
+                    <span class="font-label-sm text-[10px] text-error opacity-90">10%</span>
+                    <span class="material-symbols-outlined text-[12px] text-error absolute top-1.5 right-1.5">priority_high</span>
+                  </div>
+                </div>
+
+                <!-- Row 3: Actual Virginica -->
+                <div class="grid grid-cols-3 gap-2">
+                  <div class="flex flex-col items-center justify-center p-3 rounded-xl bg-surface-container-high/40">
+                    <span id="cm-2-0" class="font-label-lg text-base font-semibold text-outline-variant">0</span>
+                    <span class="font-label-sm text-[10px] text-outline-variant">0%</span>
+                  </div>
+                  <div class="flex flex-col items-center justify-center p-3 rounded-xl bg-surface-container-high/40">
+                    <span id="cm-2-1" class="font-label-lg text-base font-semibold text-outline-variant">0</span>
+                    <span class="font-label-sm text-[10px] text-outline-variant">0%</span>
+                  </div>
+                  <div class="flex flex-col items-center justify-center p-3 rounded-xl bg-tertiary-container/40 border border-tertiary/40 relative">
+                    <span id="cm-2-2" class="font-label-lg text-lg font-bold text-tertiary">10</span>
+                    <span class="font-label-sm text-[10px] text-tertiary-fixed opacity-80">100%</span>
+                    <span class="absolute top-1.5 right-1.5 w-1.5 h-1.5 rounded-full bg-tertiary"></span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Right: Species Diagnostics & Tuning (6 Cols) -->
+        <div class="lg:col-span-6 flex flex-col space-y-4">
+          
+          <!-- Species Diagnostics Table -->
+          <div class="p-6 rounded-2xl bg-surface-container border border-surface-container-high/60 shadow-md flex flex-col space-y-3">
+            <div class="flex items-center justify-between">
+              <div>
+                <span class="font-headline-sm text-base font-semibold text-on-surface">Taxon Diagnostics</span>
+                <p class="font-body-sm text-xs text-on-surface-variant">Class-level precision, recall, and support</p>
+              </div>
+              <span class="material-symbols-outlined text-[20px] text-on-surface-variant">filter_vintage</span>
+            </div>
+
+            <div class="flex flex-col gap-2 font-mono text-xs pt-1">
+              <div class="grid grid-cols-12 px-3 py-1 text-outline-variant uppercase">
+                <span class="col-span-5 font-sans">Taxon</span>
+                <span class="col-span-2 text-right">Prec</span>
+                <span class="col-span-2 text-right">Rec</span>
+                <span class="col-span-3 text-right">Supp</span>
+              </div>
+
+              <!-- Setosa -->
+              <div class="grid grid-cols-12 items-center px-3 py-2 rounded-xl bg-surface-container-low border border-surface-container-high/40">
+                <div class="col-span-5 flex items-center gap-2 font-sans font-medium text-on-surface">
+                  <span class="w-2 h-2 rounded-full bg-primary"></span>
+                  <span>Setosa</span>
+                </div>
+                <span id="diag-setosa-p" class="col-span-2 text-right text-primary font-semibold">1.00</span>
+                <span id="diag-setosa-r" class="col-span-2 text-right text-primary font-semibold">1.00</span>
+                <span class="col-span-3 text-right text-on-surface-variant">10 (33%)</span>
+              </div>
+
+              <!-- Versicolor -->
+              <div class="grid grid-cols-12 items-center px-3 py-2 rounded-xl bg-surface-container-low border border-surface-container-high/40">
+                <div class="col-span-5 flex items-center gap-2 font-sans font-medium text-on-surface">
+                  <span class="w-2 h-2 rounded-full bg-secondary"></span>
+                  <span>Versicolor</span>
+                </div>
+                <span id="diag-versic-p" class="col-span-2 text-right text-secondary font-semibold">1.00</span>
+                <span id="diag-versic-r" class="col-span-2 text-right text-secondary font-semibold">0.90</span>
+                <span class="col-span-3 text-right text-on-surface-variant">10 (33%)</span>
+              </div>
+
+              <!-- Virginica -->
+              <div class="grid grid-cols-12 items-center px-3 py-2 rounded-xl bg-surface-container-low border border-surface-container-high/40">
+                <div class="col-span-5 flex items-center gap-2 font-sans font-medium text-on-surface">
+                  <span class="w-2 h-2 rounded-full bg-tertiary"></span>
+                  <span>Virginica</span>
+                </div>
+                <span id="diag-virgin-p" class="col-span-2 text-right text-tertiary font-semibold">0.91</span>
+                <span id="diag-virgin-r" class="col-span-2 text-right text-tertiary font-semibold">1.00</span>
+                <span class="col-span-3 text-right text-on-surface-variant">10 (33%)</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Hyperparameter Tuning Card (k vs Accuracy) -->
+          <div class="p-6 rounded-2xl bg-surface-container border border-surface-container-high/60 shadow-md flex flex-col space-y-3">
+            <div class="flex items-center justify-between">
+              <div>
+                <div class="flex items-center gap-2">
+                  <span class="font-headline-sm text-base font-semibold text-on-surface">Hyperparameter Tuning</span>
+                  <span class="px-2.5 py-0.5 rounded-full bg-primary-container/20 text-primary font-label-sm text-xs font-mono font-medium border border-primary/30">Optimal k=3</span>
+                </div>
+                <span class="font-body-sm text-xs text-on-surface-variant">Validation Accuracy vs Neighborhood Size (k)</span>
+              </div>
+              <div class="w-8 h-8 rounded-full bg-surface-container-high flex items-center justify-center text-tertiary">
+                <span class="material-symbols-outlined text-[18px]">show_chart</span>
+              </div>
+            </div>
+
+            <!-- Inline SVG Tuning Graph -->
+            <div class="w-full h-36 relative flex items-center justify-center pt-2">
+              <svg class="w-full h-full overflow-visible" viewBox="0 0 320 120" fill="none">
+                <defs>
+                  <linearGradient id="tuningGrad" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stop-color="#4cd7f6" stop-opacity="0.35"/>
+                    <stop offset="100%" stop-color="#4cd7f6" stop-opacity="0.0"/>
+                  </linearGradient>
+                </defs>
+                <line x1="20" y1="20" x2="300" y2="20" stroke="#262a33" stroke-dasharray="3 3" stroke-width="1"/>
+                <line x1="20" y1="55" x2="300" y2="55" stroke="#262a33" stroke-dasharray="3 3" stroke-width="1"/>
+                <line x1="20" y1="90" x2="300" y2="90" stroke="#262a33" stroke-dasharray="3 3" stroke-width="1"/>
+                <text x="5" y="24" fill="#869397" font-family="JetBrains Mono" font-size="8">1.00</text>
+                <text x="5" y="59" fill="#869397" font-family="JetBrains Mono" font-size="8">0.95</text>
+                <text x="5" y="94" fill="#869397" font-family="JetBrains Mono" font-size="8">0.90</text>
+                <path d="M 30,60 L 60,32 L 95,22 L 135,42 L 175,32 L 215,58 L 255,75 L 295,90 L 295,110 L 30,110 Z" fill="url(#tuningGrad)"/>
+                <path d="M 30,60 L 60,32 L 95,22 L 135,42 L 175,32 L 215,58 L 255,75 L 295,90" stroke="#4cd7f6" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5"/>
+                <circle cx="30" cy="60" r="3" fill="#0f131c" stroke="#4cd7f6" stroke-width="2"/>
+                <circle cx="60" cy="32" r="3" fill="#0f131c" stroke="#4cd7f6" stroke-width="2"/>
+                <circle cx="95" cy="22" r="6" fill="#4cd7f6" fill-opacity="0.25"/>
+                <circle cx="95" cy="22" r="4" fill="#4edea3" stroke="#0f131c" stroke-width="2"/>
+                <line x1="95" y1="22" x2="95" y2="105" stroke="#4edea3" stroke-dasharray="2 2" stroke-width="1"/>
+                <circle cx="135" cy="42" r="3" fill="#0f131c" stroke="#4cd7f6" stroke-width="2"/>
+                <circle cx="175" cy="32" r="3" fill="#0f131c" stroke="#4cd7f6" stroke-width="2"/>
+                <circle cx="215" cy="58" r="3" fill="#0f131c" stroke="#4cd7f6" stroke-width="2"/>
+                <circle cx="255" cy="75" r="3" fill="#0f131c" stroke="#4cd7f6" stroke-width="2"/>
+                <circle cx="295" cy="90" r="3" fill="#0f131c" stroke="#4cd7f6" stroke-width="2"/>
+                <text x="26" y="116" fill="#869397" font-family="JetBrains Mono" font-size="8">k=1</text>
+                <text x="86" y="116" fill="#4edea3" font-family="JetBrains Mono" font-size="8" font-weight="600">k=3*</text>
+                <text x="128" y="116" fill="#869397" font-family="JetBrains Mono" font-size="8">k=5</text>
+                <text x="168" y="116" fill="#869397" font-family="JetBrains Mono" font-size="8">k=7</text>
+                <text x="208" y="116" fill="#869397" font-family="JetBrains Mono" font-size="8">k=9</text>
+                <text x="246" y="116" fill="#869397" font-family="JetBrains Mono" font-size="8">k=11</text>
+                <text x="286" y="116" fill="#869397" font-family="JetBrains Mono" font-size="8">k=15</text>
+              </svg>
+            </div>
+
+            <!-- Optimization takeaway -->
+            <div class="flex items-center justify-between p-2.5 rounded-xl bg-surface-container-high border border-surface-container-highest/30 text-xs">
+              <span class="text-on-surface font-sans">Global peak reached at <strong class="text-tertiary font-mono">k=3</strong></span>
+              <span class="text-on-surface-variant font-mono text-[11px]">Overfitting threshold: k &lt; 2</span>
+            </div>
+          </div>
+
+        </div>
+
+      </div>
+
+      <!-- Bottom Action Bar -->
+      <div class="flex items-center gap-3">
+        <button id="retrain-btn" onclick="triggerRetrainSimulation()" type="button" class="flex-1 flex items-center justify-center gap-2 h-12 px-6 rounded-xl bg-primary-container text-on-primary font-semibold text-sm shadow-md hover:opacity-95 active:scale-95 transition-all">
+          <span class="material-symbols-outlined text-[18px]">model_training</span>
+          <span>Re-evaluate Holdout Test Split</span>
+        </button>
+        <button onclick="exportMetricsReport()" type="button" class="h-12 px-4 flex items-center justify-center rounded-xl bg-surface-container hover:bg-surface-container-high border border-surface-container-high/60 text-on-surface font-mono text-xs gap-2 active:scale-95 transition-all shadow-sm" title="Export Classification JSON Report">
+          <span class="material-symbols-outlined text-[18px]">download</span>
+          <span>Export Metrics</span>
+        </button>
+      </div>
+
+    </section>
+
+    <!-- ================= VIEW 5: DATASET (DATASET EXPLORER) ================= -->
+    <section id="view-dataset" class="view-section flex-col space-y-6 w-full">
+      
+      <!-- Dataset Header Banner -->
+      <div class="w-full bg-surface-container-low rounded-2xl p-6 shadow-sm border border-surface-container-high/60 space-y-2">
+        <div class="flex flex-wrap items-center justify-between gap-2">
+          <div class="flex items-center gap-2">
+            <span class="material-symbols-outlined text-primary text-[22px]">database</span>
+            <span class="font-label-sm text-xs text-primary uppercase tracking-wider font-mono">Botanical Registry</span>
+          </div>
+          <span class="px-2.5 py-0.5 rounded-full bg-surface-container-high text-on-surface-variant font-label-sm text-xs font-mono flex items-center gap-1.5 border border-surface-container-highest">
+            <span class="w-1.5 h-1.5 rounded-full bg-tertiary"></span>
+            <span>150 Morphological Vectors</span>
+          </span>
+        </div>
+        <h1 class="font-headline-lg text-2xl md:text-3xl text-on-surface font-semibold tracking-tight">Iris Dataset Explorer</h1>
+        <p class="font-body-sm text-sm text-on-surface-variant leading-relaxed max-w-3xl">
+          Raw botanical measurements collected by Edgar Anderson on the Gaspé Peninsula and published by R.A. Fisher (1936). Filter, sort, and search across all 150 specimens.
+        </p>
+      </div>
+
+      <!-- Filters & Action Bar -->
+      <div class="w-full bg-surface-container rounded-2xl p-4 md:p-5 space-y-4 shadow-md border border-surface-container-high/60">
+        
+        <!-- Search & CSV Export -->
+        <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+          <div class="relative flex-1">
+            <span class="material-symbols-outlined absolute left-3.5 top-1/2 -translate-y-1/2 text-on-surface-variant text-[18px]">search</span>
+            <input id="dataset-search" oninput="handleDatasetSearch()" type="text" placeholder="Search specimen code, species, or numeric dimension (e.g. 5.1)..." class="w-full h-11 pl-10 pr-4 rounded-xl bg-surface-container-lowest text-on-surface font-body-sm text-sm placeholder:text-outline border border-surface-container-high focus:outline-none focus:border-primary transition-all"/>
+          </div>
+          <button onclick="exportCSVData()" type="button" class="h-11 px-5 rounded-xl bg-primary text-on-primary font-label-md text-xs font-mono font-semibold flex items-center justify-center gap-2 active:scale-95 transition-transform shadow-sm">
+            <span class="material-symbols-outlined text-[18px]">file_download</span>
+            <span>Export CSV</span>
+          </button>
+        </div>
+
+        <!-- Species Quick Filter Pills -->
+        <div class="flex items-center gap-2 overflow-x-auto no-scrollbar py-1">
+          <button onclick="filterDatasetSpecies('all')" class="dataset-filter-pill active px-3.5 py-1.5 rounded-full bg-surface-bright text-on-surface font-label-sm text-xs font-mono flex items-center gap-1.5 transition-all shadow-sm border border-surface-container-highest" data-species="all">
+            <span class="w-2 h-2 rounded-full bg-on-surface"></span>
+            <span>All</span>
+            <span class="opacity-60">150</span>
+          </button>
+          <button onclick="filterDatasetSpecies('setosa')" class="dataset-filter-pill px-3.5 py-1.5 rounded-full bg-surface-container-high text-on-surface-variant font-label-sm text-xs font-mono flex items-center gap-1.5 hover:text-on-surface transition-all border border-surface-container-highest" data-species="setosa">
+            <span class="w-2 h-2 rounded-full bg-primary shadow-[0_0_6px_rgba(6,182,212,0.6)]"></span>
+            <span>Setosa</span>
+            <span class="opacity-60">50</span>
+          </button>
+          <button onclick="filterDatasetSpecies('versicolor')" class="dataset-filter-pill px-3.5 py-1.5 rounded-full bg-surface-container-high text-on-surface-variant font-label-sm text-xs font-mono flex items-center gap-1.5 hover:text-on-surface transition-all border border-surface-container-highest" data-species="versicolor">
+            <span class="w-2 h-2 rounded-full bg-secondary shadow-[0_0_6px_rgba(208,188,255,0.6)]"></span>
+            <span>Versicolor</span>
+            <span class="opacity-60">50</span>
+          </button>
+          <button onclick="filterDatasetSpecies('virginica')" class="dataset-filter-pill px-3.5 py-1.5 rounded-full bg-surface-container-high text-on-surface-variant font-label-sm text-xs font-mono flex items-center gap-1.5 hover:text-on-surface transition-all border border-surface-container-highest" data-species="virginica">
+            <span class="w-2 h-2 rounded-full bg-tertiary shadow-[0_0_6px_rgba(78,222,163,0.6)]"></span>
+            <span>Virginica</span>
+            <span class="opacity-60">50</span>
+          </button>
+        </div>
+
+        <!-- Sorter Controls & Record Count Readout -->
+        <div class="flex items-center justify-between pt-1 border-t border-surface-container-high/60 text-xs font-mono">
+          <div class="flex items-center gap-2 text-on-surface-variant">
+            <span class="material-symbols-outlined text-[16px]">swap_vert</span>
+            <span>Sort By:</span>
+            <select id="dataset-sort" onchange="handleDatasetSort()" class="bg-surface-container-lowest text-primary font-mono text-xs rounded-lg px-2.5 py-1 border border-surface-container-high focus:outline-none cursor-pointer">
+              <option value="id_asc">Specimen ID (#001 → #150)</option>
+              <option value="petal_length_desc">Petal Length (Largest First)</option>
+              <option value="petal_length_asc">Petal Length (Smallest First)</option>
+              <option value="sepal_length_desc">Sepal Length (Largest First)</option>
+              <option value="sepal_width_desc">Sepal Width (Largest First)</option>
+            </select>
+          </div>
+          <span id="dataset-records-count" class="text-outline">Showing 150 specimens</span>
+        </div>
+
+      </div>
+
+      <!-- Specimen Cards List -->
+      <div id="dataset-cards-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3.5 w-full">
+        <!-- Rendered via JS -->
+      </div>
+
+    </section>
+
+  </main>
+
+  <!-- ================= FIXED BOTTOM NAV (MOBILE & TABLET) ================= -->
+  <nav class="fixed bottom-0 w-full z-50 pb-safe bg-surface-dim/90 backdrop-blur-2xl border-t border-surface-container-high/60 shadow-[0_-4px_24px_rgba(0,0,0,0.5)] md:hidden">
+    <div class="flex items-center justify-between px-2 h-16">
+      <button onclick="switchTab('dashboard')" class="nav-tab-mobile flex flex-col items-center justify-center flex-1 py-1 text-primary active" data-target="dashboard">
+        <span class="material-symbols-outlined text-[20px]">analytics</span>
+        <span class="font-label-sm text-[10px] tracking-tight font-mono">Overview</span>
+      </button>
+      <button onclick="switchTab('predict')" class="nav-tab-mobile flex flex-col items-center justify-center flex-1 py-1 text-on-surface-variant" data-target="predict">
+        <span class="material-symbols-outlined text-[20px]">psychology</span>
+        <span class="font-label-sm text-[10px] tracking-tight font-mono">Predict</span>
+      </button>
+      <button onclick="switchTab('analytics')" class="nav-tab-mobile flex flex-col items-center justify-center flex-1 py-1 text-on-surface-variant" data-target="analytics">
+        <span class="material-symbols-outlined text-[20px]">scatter_plot</span>
+        <span class="font-label-sm text-[10px] tracking-tight font-mono">Analytics</span>
+      </button>
+      <button onclick="switchTab('performance')" class="nav-tab-mobile flex flex-col items-center justify-center flex-1 py-1 text-on-surface-variant" data-target="performance">
+        <span class="material-symbols-outlined text-[20px]">grid_view</span>
+        <span class="font-label-sm text-[10px] tracking-tight font-mono">Metrics</span>
+      </button>
+      <button onclick="switchTab('dataset')" class="nav-tab-mobile flex flex-col items-center justify-center flex-1 py-1 text-on-surface-variant" data-target="dataset">
+        <span class="material-symbols-outlined text-[20px]">table_chart</span>
+        <span class="font-label-sm text-[10px] tracking-tight font-mono">Dataset</span>
+      </button>
+    </div>
+  </nav>
+
+  <!-- ================= ABOUT MODAL ================= -->
+  <div id="about-modal" class="fixed inset-0 z-50 bg-black/75 backdrop-blur-md flex items-center justify-center p-4 hidden">
+    <div class="w-full max-w-lg rounded-2xl bg-surface-container-low border border-surface-container-highest p-6 shadow-2xl space-y-4">
+      <div class="flex items-center justify-between">
+        <div class="flex items-center gap-2">
+          <span class="material-symbols-outlined text-primary text-[22px]">info</span>
+          <h3 class="font-headline-sm text-lg font-semibold text-on-surface">About IrisAI Project</h3>
+        </div>
+        <button onclick="closeModal('about-modal')" class="w-8 h-8 rounded-lg bg-surface-container hover:bg-surface-container-high flex items-center justify-center text-on-surface-variant">
+          <span class="material-symbols-outlined text-[18px]">close</span>
+        </button>
+      </div>
+      <div class="font-body-sm text-sm text-on-surface-variant space-y-3 leading-relaxed">
+        <p>
+          <strong class="text-on-surface font-medium">IrisAI</strong> is an end-to-end Machine Learning laboratory designed for high-precision botanical classification and exploratory data analysis.
+        </p>
+        <p>
+          Originally collected by American botanist <strong class="text-primary">Edgar Anderson (1935)</strong> in the Gaspé Peninsula and popularized by statistician <strong class="text-secondary">Ronald A. Fisher (1936)</strong>, the Iris dataset represents the gold standard benchmark for linear discriminant analysis.
+        </p>
+        <div class="p-3 rounded-xl bg-surface-container font-mono text-xs text-outline space-y-1">
+          <div>• Pipeline: <span class="text-on-surface font-semibold">StandardScaler + K-Nearest Neighbors (k=3)</span></div>
+          <div>• UI Design: <span class="text-primary font-semibold">Stitch Project 14704649354205307970</span></div>
+          <div>• Backend: <span class="text-tertiary font-semibold">Native Python REST Server (Zero Dep)</span></div>
+        </div>
+      </div>
+      <div class="pt-2 flex justify-end">
+        <button onclick="closeModal('about-modal')" class="px-5 py-2 rounded-xl bg-primary text-on-primary font-label-md text-xs font-semibold">Got it</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= SETTINGS MODAL ================= -->
+  <div id="settings-modal" class="fixed inset-0 z-50 bg-black/75 backdrop-blur-md flex items-center justify-center p-4 hidden">
+    <div class="w-full max-w-lg rounded-2xl bg-surface-container-low border border-surface-container-highest p-6 shadow-2xl space-y-4">
+      <div class="flex items-center justify-between">
+        <div class="flex items-center gap-2">
+          <span class="material-symbols-outlined text-secondary text-[22px]">settings</span>
+          <h3 class="font-headline-sm text-lg font-semibold text-on-surface">System Settings</h3>
+        </div>
+        <button onclick="closeModal('settings-modal')" class="w-8 h-8 rounded-lg bg-surface-container hover:bg-surface-container-high flex items-center justify-center text-on-surface-variant">
+          <span class="material-symbols-outlined text-[18px]">close</span>
+        </button>
+      </div>
+      <div class="space-y-4 font-body-sm text-sm text-on-surface-variant">
+        <div class="flex items-center justify-between p-3 rounded-xl bg-surface-container">
+          <div class="flex flex-col">
+            <span class="text-on-surface font-medium">Inference Engine</span>
+            <span class="text-xs text-outline font-mono">Select backend model algorithm</span>
+          </div>
+          <select id="setting-active-model" class="bg-surface-container-highest text-primary font-mono text-xs rounded-lg px-3 py-1.5 focus:outline-none cursor-pointer">
+            <option value="K-Nearest Neighbors">KNN (k=3) [Recommended]</option>
+            <option value="Support Vector Machine">SVM (RBF Kernel)</option>
+            <option value="Logistic Regression">Logistic Regression</option>
+            <option value="Random Forest">Random Forest</option>
+            <option value="Decision Tree">Decision Tree</option>
+          </select>
+        </div>
+
+        <div class="flex items-center justify-between p-3 rounded-xl bg-surface-container">
+          <div class="flex flex-col">
+            <span class="text-on-surface font-medium">Visual Mode</span>
+            <span class="text-xs text-outline font-mono">Bioluminescent Deep Charcoal</span>
+          </div>
+          <span class="px-2.5 py-1 rounded bg-surface-container-highest text-primary font-mono text-xs">Dark Canvas</span>
+        </div>
+
+        <div class="flex items-center justify-between p-3 rounded-xl bg-surface-container">
+          <div class="flex flex-col">
+            <span class="text-on-surface font-medium">REST API Endpoint</span>
+            <span class="text-xs text-outline font-mono">http://127.0.0.1:8000/api</span>
+          </div>
+          <span class="px-2.5 py-1 rounded bg-tertiary-container/30 text-tertiary font-mono text-xs">Connected</span>
+        </div>
+      </div>
+      <div class="pt-2 flex justify-end">
+        <button onclick="closeModal('settings-modal')" class="px-5 py-2 rounded-xl bg-primary text-on-primary font-label-md text-xs font-semibold">Save &amp; Close</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Application Logic -->
+  <script src="/app.js"></script>
+</body>
+</html>
